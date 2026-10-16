@@ -109,6 +109,8 @@ npm run preview
 
 公开仓库 `allenz-me/open-utd` 已创建，GitHub Pages 已选择 Actions 构建来源，`CROSSREF_MAILTO` 已保存为 Actions Secret；giscus App 已安装，Discussions 和四个公开评论变量已配置。重新部署此仓库无需重复这些设置。以下步骤也适用于 fork 或迁移到新仓库。
 
+当前网站使用上述自定义域名，并已强制启用 HTTPS；Actions 配置为 `PUBLIC_SITE_URL=https://www.open-utd-hot-take.xyz` 和 `PUBLIC_BASE_PATH=/`。
+
 1. 仓库使用公开可见性和 `main` 默认分支。在 **Settings → Pages → Build and deployment** 选择 **GitHub Actions**。
 2. 在 **Settings → Actions → General** 允许所需 Actions。生产构建作业声明 `contents: write`，用于提交经过验证的 SQLite 快照；另需 `discussions: read` 读取公开评论。组织策略必须允许这些权限。
 3. 在 **Settings → Secrets and variables → Actions → Secrets** 添加 `CROSSREF_MAILTO`，填写真实维护者联系邮箱。联系地址只保存在 Secret 中；无需 Crossref API key。

@@ -8,7 +8,7 @@ Repository: [allenz-me/open-utd](https://github.com/allenz-me/open-utd) · Websi
 
 ## Interface languages
 
-The **English / 中文** switch covers navigation, buttons, filters, status messages, policies, and the comment interface. The preference is saved in the current browser's `localStorage` under `open-utd-language` and persists across reloads and navigation. Without a saved preference, browsers configured for Chinese use Chinese; other browsers use English. The static fallback is English when JavaScript is disabled.
+The **English / Chinese** switch covers navigation, buttons, filters, status messages, policies, and the comment interface. The preference is saved in the current browser's `localStorage` under `open-utd-language` and persists across reloads and navigation. Without a saved preference, browsers configured for Chinese use Chinese; other browsers use English. The static fallback is English when JavaScript is disabled.
 
 **Journal names, article titles, and author names remain in the source English, without automatic translation. This site does not display or index article abstracts.** Switching languages does not change article or journal URLs, public IDs, search data, or discussion mappings. The giscus interface switches between `en` and `zh-CN`; existing comment text is unchanged.
 
@@ -108,6 +108,8 @@ The repository has two workflows:
 ### Current configuration and first deployment
 
 The public `allenz-me/open-utd` repository is already configured to deploy Pages through Actions. `CROSSREF_MAILTO` is stored as an Actions Secret, the giscus App is installed, and Discussions plus the four public comment variables are configured. These steps do not need to be repeated when redeploying this repository. They also describe setup for a fork or a new repository.
+
+The live site uses the custom domain above with HTTPS enforced; its Actions configuration is `PUBLIC_SITE_URL=https://www.open-utd-hot-take.xyz` and `PUBLIC_BASE_PATH=/`.
 
 1. Use a public repository with `main` as its default branch. In **Settings → Pages → Build and deployment**, select **GitHub Actions**.
 2. Allow the required Actions in **Settings → Actions → General**. The production build job declares `contents: write` to commit validated SQLite snapshots and `discussions: read` to collect public comments. Organization policies must permit these permissions.
