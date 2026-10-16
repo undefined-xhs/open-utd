@@ -72,7 +72,9 @@ export function localizeUi(root:Element=document.body, locale:Locale=currentLoca
     }
     originalAttributes.set(element,saved);
   });
-  root.querySelectorAll<HTMLTimeElement>('time[datetime]').forEach(element=>{element.textContent=localizedDate(element.dateTime,locale);});
+  root.querySelectorAll<HTMLTimeElement>('time[datetime]').forEach(element=>{
+    if(!element.closest('[data-ui-dynamic]'))element.textContent=localizedDate(element.dateTime,locale);
+  });
   root.querySelectorAll<HTMLElement>('[data-snapshot]').forEach(element=>{
     const {journals,issues,articles,updated}=JSON.parse(element.dataset.snapshot!) as {journals:number;issues:number;articles:number;updated:string};
     const n=(value:number)=>value.toLocaleString(locale);
