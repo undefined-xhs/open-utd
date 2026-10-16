@@ -3,7 +3,7 @@ import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
 import ArticleCard from '../../../../components/ArticleCard.astro';
 import {getManifest,getIssue} from '../../../../lib/catalog';
-import {href,journalUrl} from '../../../../lib/urls';
+import {href,journalUrl,reviewsUrl,yearUrl} from '../../../../lib/urls';
 import {issueTitle,number,date} from '../../../../lib/formatting';
 import {copy} from '../../../../lib/copy';
 export function getStaticPaths() { return getManifest().issues.map(i=>({params:{slug:i.journal_slug,issueId:i.public_id}})); }
@@ -12,11 +12,11 @@ const title = issueTitle(issue);
 ---
 <BaseLayout originalTitle title={`${title} · ${issue.journal.name}`} description={`Browse ${number(issue.article_count)} articles in ${title}, ${issue.journal.name}${issue.publication_year ? ` (${issue.publication_year})` : ''}.`}>
   <div class="container">
-    <Breadcrumbs items={[{label:copy.common.journals,url:href('journals/')},{label:issue.journal.name,url:journalUrl(issue.journal),original:true},{label:title}]} />
+    <Breadcrumbs items={[{label:copy.common.journals,url:href('journals/')},{label:issue.journal.name,url:journalUrl(issue.journal),original:true},{label:issue.publication_year ? String(issue.publication_year) : 'Year not recorded',url:yearUrl(issue.journal,issue.publication_year || 'undated')},{label:title}]} />
     <div class="page-intro"><a class="eyebrow" data-original href={journalUrl(issue.journal)}>{issue.journal.name}</a><h1>{title}</h1><div class="journal-subtitle"><span>{issue.publication_date ? <time datetime={issue.publication_date}>{date(issue.publication_date)}</time> : issue.publication_year}</span><span>{number(issue.article_count)} articles</span></div>{issue.issue_title && <p class="lead" data-original>{issue.issue_title}</p>}</div>
     <div class="journal-layout">
       <section aria-label="Articles in this issue">{issue.articles.length ? issue.articles.map(article=><ArticleCard article={article} />) : <p class="empty-state">{copy.common.empty}</p>}</section>
-      <aside class="sidebar"><h2>About this issue</h2><p class="muted text-xs mt-5">{copy.common.coverage}</p><nav class="sidebar-nav"><a href={journalUrl(issue.journal)}>All issues ←</a><a href={`${journalUrl(issue.journal)}#reviews`}>Journal reviews & experiences →</a></nav></aside>
+      <aside class="sidebar"><h2>About this issue</h2><p class="muted text-xs mt-5">{copy.common.coverage}</p><nav class="sidebar-nav"><a href={yearUrl(issue.journal,issue.publication_year || 'undated')}>All issues in this year ←</a><a href={reviewsUrl(issue.journal)}>Journal reviews & experiences →</a></nav></aside>
     </div>
   </div>
 </BaseLayout>

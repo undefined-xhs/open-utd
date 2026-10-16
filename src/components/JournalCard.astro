@@ -1,18 +1,13 @@
 ---
 import type { Journal } from '../lib/types';
-import { journalUrl } from '../lib/urls';
-import { copy } from '../lib/copy';
-import { number } from '../lib/formatting';
+import { journalUrl, reviewsUrl } from '../lib/urls';
 interface Props { journal:Journal; index?:number; }
-const {journal, index = 0} = Astro.props;
-const colors = ['#346452','#687351','#526a70','#8a6951'];
+const {journal} = Astro.props;
 ---
-<article class="journal-card" data-journal-name={`${journal.name} ${journal.abbreviation || ''}`.toLowerCase()} data-journal-subject={journal.subject || ''}>
-  <a class="journal-initial" href={journalUrl(journal)} style={`--book-color:${colors[index % colors.length]}`} tabindex="-1" aria-hidden="true"><small>JOURNAL</small><strong data-original>{journal.abbreviation || journal.name.split(' ').map(word=>word[0]).join('')}</strong></a>
+<article class="journal-card review-card" data-journal-name={`${journal.name} ${journal.abbreviation || ''}`.toLowerCase()} data-journal-subject={journal.subject || ''}>
   <div class="journal-card-main">
-    <h3 data-original><a href={journalUrl(journal)}>{journal.name}</a></h3>
+    <h3 data-original><a href={reviewsUrl(journal)}>{journal.name}</a></h3>
     <p class="field" data-original>{journal.subject || journal.publisher}</p>
-    <p class="card-meta"><span>{number(journal.article_count)} {copy.common.countSuffix}</span><span>{journal.start_year || 2006} onward</span></p>
-    <div class="card-actions"><a href={journalUrl(journal)}>{copy.common.browse} <span aria-hidden="true">↗</span></a><a href={`${journalUrl(journal)}#reviews`}>Reviews & experiences <span aria-hidden="true">→</span></a></div>
+    <div class="card-actions"><a class="review-link" href={reviewsUrl(journal)}>Reviews & experiences <span aria-hidden="true">→</span></a><a href={journalUrl(journal)}>Browse archive <span aria-hidden="true">↗</span></a></div>
   </div>
 </article>

@@ -2,7 +2,7 @@
 
 An open journal catalogue with searchable article metadata and discussions for journals and individual articles. Built with Python + SQLite, Astro + TypeScript + Tailwind CSS, Pagefind, and GitHub Actions / Pages. The interface supports English and 中文; original journal and article metadata stay in English.
 
-项目仓库：[allenz-me/open-utd](https://github.com/allenz-me/open-utd) · 默认站点地址：[allenz-me.github.io/open-utd](https://allenz-me.github.io/open-utd/)（成功执行 Pages 部署后可访问）。
+项目仓库：[allenz-me/open-utd](https://github.com/allenz-me/open-utd) · 网站：[allenz-me.github.io/open-utd](https://allenz-me.github.io/open-utd/)。
 
 ## 界面语言
 
@@ -19,9 +19,24 @@ An open journal catalogue with searchable article metadata and discussions for j
 | Marketing Science | 0732-2399 | 1526-548X | 2006 |
 | Operations Research | 0030-364X | 1526-5463 | 2006 |
 
-期刊清单在 [`data/journal_registry.csv`](data/journal_registry.csv)。首次导入覆盖 2006 年起至运行时 Crossref 已收录的数据，之后按索引更新时间增量同步。网站显示的是 **Crossref 已登记的元数据**；登记延迟、缺失卷期和 Online First 记录意味着它不能保证与出版社“最新一期完整目录”同步。请以每本期刊页面的覆盖范围、同步时间和官方期刊链接为准。合成演示数据有明确标记，生产校验拒绝演示数据。
+期刊清单在 [`data/journal_registry.csv`](data/journal_registry.csv)。首次导入覆盖 2006 年起至运行时 Crossref 已收录的数据，之后按索引更新时间增量同步。网站显示的是 **Crossref 已登记的元数据**；登记延迟、缺失卷期和 Online First 记录意味着它不能保证与出版社“最新一期完整目录”同步。具体覆盖和同步结果见数据来源页及同步报告，最新期目录以出版社官方期刊页为准。合成演示数据有明确标记，生产校验拒绝演示数据。
 
 2026 年 10 月 16 日首轮正式导入包含 4 本期刊、581 个期次、11,990 篇论文。后续数量以数据库及 [`data/sync-report.md`](data/sync-report.md) 为准。
+
+## 浏览与讨论
+
+首页期刊卡片优先提供**评论与投稿经验**入口，另有浏览文献入口；期刊讨论集中在独立评论页。查找论文时，按“期刊 → 年份 → 期次 → 论文”逐层浏览；尚未分配期次的论文在单独的 Online First 列表中，每页 30 篇。
+
+| 路径（站点 base path 之后） | 内容 |
+| --- | --- |
+| `/journals/{slug}/` | 期刊概况、评论入口、年份网格 |
+| `/journals/{slug}/reviews/` | 该期刊的评论与投稿经验 |
+| `/journals/{slug}/years/{year}/` | 所选年份的期次；缺失年份使用 `undated` |
+| `/journals/{slug}/issues/{issueId}/` | 该期论文列表，沿用原期次 URL |
+| `/journals/{slug}/online-first/{page}/` | Online First / Unassigned 分页列表，页码从 1 开始 |
+| `/articles/{articleId}/` | 论文元数据及该论文的独立讨论，沿用原论文 URL |
+
+页面导航和评论组件支持中英文切换，文献元数据保持英文原文。网站检索仍可直接进入论文；年份和分页导航不改变已有论文、期次的公开 ID。
 
 ## 本地运行：不需要 API key 或评论配置
 
@@ -85,7 +100,7 @@ Actions 使用固定窗口的 Crossref `from-index-date` / `until-index-date` �
 
 ## 期刊和论文评论：giscus + GitHub Discussions
 
-每本期刊和每篇论文都有各自的公开讨论，支持 GitHub 登录、Markdown、回复和 Reaction。期刊讨论用于投稿和审稿经历，论文讨论用于研究内容；评论保存在 GitHub Discussions。不做星级排名或未经验证的审稿统计。
+每本期刊和每篇论文都有各自的公开讨论，支持 GitHub 登录、Markdown、回复和 Reaction。期刊讨论位于 `/journals/{slug}/reviews/`，用于投稿和审稿经历；论文讨论仍位于论文详情页，用于研究内容。评论保存在 GitHub Discussions。不做星级排名或未经验证的审稿统计。
 
 当前评论服务已配置在 `allenz-me/open-utd` 的 **Announcements** 类别。公开配置如下；这些值是仓库和类别标识，不是凭据：
 
@@ -101,9 +116,11 @@ Actions 使用固定窗口的 Crossref `from-index-date` / `until-index-date` �
 1. 在目标公开评论仓库启用 **Discussions**，选择 Announcements 类型类别；可使用默认的 `Announcements`，或创建 `Journal Reviews`。
 2. 从 [giscus](https://giscus.app/) 安装 GitHub App，授权该仓库，取得真实 repo/category ID。
 3. 在网站源码仓库的 Actions **Variables** 设置 `PUBLIC_GISCUS_REPO`、`PUBLIC_GISCUS_REPO_ID`、`PUBLIC_GISCUS_CATEGORY`、`PUBLIC_GISCUS_CATEGORY_ID`。这些 ID 是公开配置，不是 Secrets。
-4. 手动运行 `site.yml`，保持 `sync_metadata=false`。部署后分别打开两本期刊和两篇论文，使用真实账户确认 Markdown 评论、回复、Reaction，以及 Discussion 的隔离。
+4. 手动运行 `site.yml`，保持 `sync_metadata=false`。部署后分别打开两本期刊的评论页和两篇论文详情页，使用真实账户确认 Markdown 评论、回复、Reaction，以及 Discussion 的隔离。
 
-映射使用 `specific`、`strict=1`，期刊为 `journal:<journal.public_id>`，论文为 `article:<article.public_id>`，可以使用同一 Discussion 类别。第一次评论时由 giscus 按需创建讨论，不预建数万条空 Discussion。期刊改名、域名调整或重新构建不改变讨论归属。不要删除再创建生产期刊来改名，也不要随意更换公开 `public_id`。配置缺失时显示评论尚未启用的说明，不加载无效 iframe。
+映射使用 `specific`、`strict=1`，期刊为 `journal:<journal.public_id>`，论文为 `article:<article.public_id>`，可以使用同一 Discussion 类别。期刊评论从概览页移到独立评论页后仍使用原映射，已有讨论继续保留。第一次评论时由 giscus 按需创建讨论，不预建数万条空 Discussion。期刊改名、域名调整或重新构建不改变讨论归属。不要删除再创建生产期刊来改名，也不要随意更换公开 `public_id`。配置缺失时显示评论尚未启用的说明，不加载无效 iframe。
+
+评论编辑器主题位于 `public/giscus-light.css`、`public/giscus-dark.css` 和共用的 `public/giscus-editor.css`，随网站切换明暗模式。它们通过 giscus 官方自定义主题接口加载，地址由 `PUBLIC_SITE_URL` 与 `PUBLIC_BASE_PATH` 生成；本地预览也使用公开站点上的样式，因此主题修改需部署后才能在真实 iframe 中验证。
 
 管理员通过 GitHub Discussions 删除、锁定和管理违规内容；以网站 `/guidelines/`、`/privacy/` 为准。公共纠错可提交 [GitHub Issue](https://github.com/allenz-me/open-utd/issues)，敏感信息和申诉请联系维护者，避免在公开评论中发布私人资料。
 

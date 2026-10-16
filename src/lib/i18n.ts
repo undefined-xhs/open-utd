@@ -10,6 +10,7 @@ function collect(english: unknown, chinese: unknown): void {
 }
 collect(copy,zh);
 Object.assign(translations, {
+  'Find a paper to discuss':'查找论文，参与讨论','Choose a journal':'选择期刊，交流经验','Journal reviews':'期刊评论','Browse archive':'浏览期刊档案','Browse by year':'按年份浏览','Select a year to see its issues.':'选择年份，再查看该年的期次。','Issues in this year':'本年期次','All years':'全部年份','All issues in this year':'本年全部期次','Unassigned articles':'暂未分配期次的论文','Article pagination':'论文分页','Previous page':'上一页','Next page':'下一页',
   'Home':'首页','Open UTD home':'Open UTD 首页','Main navigation':'主导航','Footer navigation':'页脚导航','Breadcrumb':'面包屑导航','Skip to content':'跳到正文','Switch color theme':'切换浅色 / 深色主题','Interface language':'界面语言','Use English interface':'使用英文界面',
   'Good research starts':'好的研究，','with':'始于','discovery.':'发现。','An open research collection':'开放的学术期刊目录','Ideas':'想法，','worth':'值得','exploring.':'探索。','Knowledge':'知识，','is a shared':'在交流中','pursuit.':'生长。','Research · Reflection · Discovery':'研究 · 思考 · 发现','Collection / 2006 onward':'收录范围 / 2006 年起','A place for research, and the people behind it.':'关注研究，也关注研究背后的人。','journals in the collection':'本收录期刊','indexed articles':'篇已索引论文','Browse & discover':'浏览与发现','Beyond the bibliography':'书目之外','About this project':'关于本项目','About the data':'了解数据',
   'Reviews & experiences':'评论与经验','Journal reviews & experiences':'期刊评论与经验','Reviews & submission experiences':'评论与投稿经验','Browse issues':'浏览期次','Journal information':'期刊信息','Collection window':'收录范围','Data & sources':'数据与来源','No unassigned articles in the current snapshot.':'当前快照中暂无未分配期次的论文。','Not recorded':'暂无记录','Year not recorded':'年份未记录','Authors not recorded':'作者未记录','Unspecified issue':'未注明期次','Journal':'期刊','Article':'论文','JOURNAL':'期刊','All issues':'全部期次','About this issue':'关于本期','Articles in this issue':'本期论文','Publication details':'发表信息','Read at original source':'前往原始来源阅读','Discuss this article':'讨论这篇论文','About this metadata':'了解这些元数据',
@@ -24,10 +25,14 @@ export function currentLocale(): Locale {
 export function translate(text: string, locale: Locale = currentLocale()): string {
   if(locale === 'en')return text;
   if(translations[text])return translations[text];
+  const leadingArrow=text.match(/^([↗→←↓])\s*(.*?)$/);
+  if(leadingArrow && translations[leadingArrow[2]])return `${leadingArrow[1]} ${translations[leadingArrow[2]]}`;
   const arrow = text.match(/^(.*?)\s*([↗→←↓])$/);
   if(arrow && translations[arrow[1]])return `${translations[arrow[1]]} ${arrow[2]}`;
   return text
     .replace(/^([\d,]+) articles$/,'$1 篇论文')
+    .replace(/^([\d,]+) issues$/,'$1 个期次')
+    .replace(/^Page (\d+) of (\d+)$/,'第 $1 页，共 $2 页')
     .replace(/^(\d{4}) onward$/,'$1 年起')
     .replace(/^Volume (.+?) · Issue (.+)$/,'第 $1 卷 · 第 $2 期')
     .replace(/^Volume (.+)$/,'第 $1 卷')

@@ -1,0 +1,33 @@
+@import url('https://giscus.app/themes/light.css');
+@import url('./giscus-editor.css');
+
+main {
+  color-scheme: light;
+  --color-fg-default: #202d2a;
+  --color-fg-muted: #66716b;
+  --color-fg-subtle: #66716b;
+  --color-canvas-default: #fffefa;
+  --color-canvas-overlay: #fffefa;
+  --color-canvas-inset: #f7f5ef;
+  --color-canvas-subtle: #f0f2eb;
+  --color-border-default: #cbd5ca;
+  --color-border-muted: #dadfd5;
+  --color-accent-fg: #235b4e;
+  --color-accent-emphasis: #235b4e;
+  --color-accent-muted: rgba(35, 91, 78, .2);
+  --color-accent-subtle: #e9eee5;
+  --color-btn-text: #202d2a;
+  --color-btn-bg: #f7f5ef;
+  --color-btn-border: #cbd5ca;
+  --color-btn-hover-bg: #e9eee5;
+  --color-btn-hover-border: #adbfae;
+  --color-btn-primary-text: #fffefa;
+  --color-btn-primary-bg: #235b4e;
+  --color-btn-primary-border: #235b4e;
+  --color-btn-primary-hover-bg: #194638;
+  --color-btn-primary-hover-border: #194638;
+  --color-btn-primary-disabled-text: rgba(255, 254, 250, .8);
+  --color-btn-primary-disabled-bg: #76958a;
+  --color-btn-primary-disabled-border: #76958a;
+  --color-primer-shadow-focus: 0 0 0 3px rgba(35, 91, 78, .16);
+}

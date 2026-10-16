@@ -1,9 +1,11 @@
 ---
 import { href } from '../lib/urls';
 import { copy } from '../lib/copy';
+interface Props {inputId?:string;}
+const {inputId}=Astro.props;
 ---
 <form class="search-box" action={href('search/')} method="get" role="search">
   <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
-  <input type="search" name="q" placeholder={copy.home.search} aria-label={copy.home.search} />
+  <input id={inputId} type="search" name="q" placeholder={copy.home.search} aria-label={copy.home.search} />
   <button type="submit" aria-label={copy.search.button}>↗</button>
 </form>

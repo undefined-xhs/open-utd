@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import GiscusComments from '../../../components/GiscusComments.astro';
+import {getManifest,getJournal} from '../../../lib/catalog';
+import {href,journalUrl} from '../../../lib/urls';
+import {copy} from '../../../lib/copy';
+export function getStaticPaths() {return getManifest().journals.map(journal=>({params:{slug:journal.slug},props:{id:journal.public_id}}));}
+const journal=getJournal(Astro.props.id);
+---
+<BaseLayout originalTitle title={`${journal.name} · Reviews & experiences`} description={`Independent reviews and submission experiences for ${journal.name}. Share a timeline, ask a question, or join the discussion.`}>
+  <div class="container review-page">
+    <Breadcrumbs items={[{label:copy.common.journals,url:href('journals/')},{label:journal.name,url:journalUrl(journal),original:true},{label:'Reviews & experiences'}]} />
+    <header class="page-intro compact-intro"><h1 data-original lang="en" class="journal-title">{journal.name}</h1><a class="text-link archive-return" href={journalUrl(journal)}>Browse archive →</a></header>
+    <GiscusComments standalone entityType="journal" publicId={journal.public_id} />
+  </div>
+</BaseLayout>

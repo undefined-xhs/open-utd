@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
+import IssueCard from '../../../../components/IssueCard.astro';
+import {getManifest,getJournal} from '../../../../lib/catalog';
+import {href,journalUrl,reviewsUrl} from '../../../../lib/urls';
+import {copy} from '../../../../lib/copy';
+export function getStaticPaths() {
+  return getManifest().journals.flatMap(entry=>{
+    const journal=getJournal(entry.public_id);
+    return [...new Set(journal.issues.map(issue=>issue.publication_year ? String(issue.publication_year) : 'undated'))].map(year=>({params:{slug:entry.slug,year},props:{id:entry.public_id}}));
+  });
+}
+const journal=getJournal(Astro.props.id);
+const year=Astro.params.year!;
+const yearLabel=year==='undated'?'Year not recorded':year;
+const issues=journal.issues.filter(issue=>(issue.publication_year ? String(issue.publication_year) : 'undated')===year);
+---
+<BaseLayout originalTitle title={`${journal.name} · ${yearLabel}`} description={`Browse ${yearLabel} issues of ${journal.name}.`}>
+  <div class="container archive-page">
+    <Breadcrumbs items={[{label:copy.common.journals,url:href('journals/')},{label:journal.name,url:journalUrl(journal),original:true},{label:yearLabel}]} />
+    <header class="page-intro compact-intro"><a class="eyebrow" data-original href={journalUrl(journal)}>{journal.name}</a><h1>{yearLabel}</h1><div class="archive-navigation"><a class="text-link" href={journalUrl(journal)}>All years ←</a><a class="text-link" href={reviewsUrl(journal)}>Reviews & experiences →</a></div></header>
+    <section aria-label="Issues in this year" class="year-issues"><div class="issue-grid">{issues.map(issue=><IssueCard journal={journal} issue={issue} />)}</div></section>
+  </div>
+</BaseLayout>

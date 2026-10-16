@@ -3,10 +3,10 @@ type Translation<T> = T extends string ? string : T extends readonly (infer U)[]
 export const zh: Translation<typeof copy> = {
   name:'Open UTD', fullName:'学术期刊评论',
   description:'浏览学术期刊、发现研究成果，分享投稿经历。一个独立、开放的学术元数据目录。',
-  nav:{journals:'期刊',search:'搜索',about:'关于',github:'GitHub'},
-  home:{eyebrow:'从这里，走近学术研究',title:'好的研究，\n始于发现。',lead:'浏览期刊，探索研究，也分享你在学术路上的收获。',search:'搜索论文、作者、期刊或 DOI',collection:'期刊目录',collectionNote:'聚焦管理学、信息系统、市场营销与运筹学的期刊与研究。',browse:'浏览全部期刊',scope:'收录范围：2006 年起',update:'元数据每周更新',independent:'独立维护，开放源代码',recent:'最近更新',recentNote:'查看各期刊最近一次元数据同步。',note:'找到研究，也读懂背景。',noteBody:'在这里查找论文，讨论研究，也交流投稿经验。通过原始来源阅读论文，在期刊或论文的独立讨论区分享你的看法。'},
+  nav:{journals:'期刊评论',search:'搜索',about:'关于',github:'GitHub'},
+  home:{eyebrow:'从这里，走近学术研究',title:'交流投稿经验。\n讨论学术研究。',lead:'按期刊交流投稿经历，找到感兴趣的论文，加入它的独立讨论。',search:'通过标题、作者或 DOI 查找论文',collection:'期刊目录',collectionNote:'聚焦管理学、信息系统、市场营销与运筹学的期刊与研究。',browse:'浏览全部期刊',scope:'收录范围：2006 年起',update:'元数据每周更新',independent:'独立维护，开放源代码',recent:'最近更新',recentNote:'查看各期刊最近一次元数据同步。',note:'找到研究，也读懂背景。',noteBody:'在这里查找论文，讨论研究，也交流投稿经验。通过原始来源阅读论文，在期刊或论文的独立讨论区分享你的看法。'},
   common:{journals:'期刊',articles:'论文',issues:'期次',authors:'作者',publisher:'出版机构',field:'研究领域',issn:'ISSN',source:'元数据来源',updated:'元数据更新时间',browse:'浏览期刊',official:'出版机构网站',empty:'暂无记录。',back:'返回期刊目录',view:'查看论文',abstract:'摘要',noAbstract:'暂不提供可转载的摘要。',noAbstractBody:'请前往论文官方来源查看摘要与原文。公开的元数据不代表可以转载摘要。',permitted:'此摘要依据已核实的转载许可展示。',doi:'DOI',online:'在线优先 / 暂未分配期次',onlineNote:'这些记录尚未确认所属期次，可能是在线优先发表，也可能只是期次元数据不完整。',coverage:'收录情况取决于来源元数据，可能存在遗漏。',demo:'演示 / 合成数据 — 所有示例期刊与论文均为虚构。',countSuffix:'篇论文',noIssues:'尚未导入已分配期次的记录。',notSynced:'等待首次导入元数据',pages:'页码',published:'发表日期',licensed:'摘要许可',loading:'正在加载…'},
-  journal:{title:'找到下一个研究方向。',intro:'按期刊名称或研究领域浏览。每本期刊都汇集了历年期次、论文与投稿经验。',filter:'查找期刊',all:'全部研究领域',noResults:'没有符合筛选条件的期刊。',archive:'历年期次',reviews:'期刊评论与投稿经验',reviewIntro:'欢迎分享亲身投稿经历，或提出建设性的问题。这里的内容是个人经验，不是官方期刊评价。',commentsOff:'评论功能尚未配置。',commentsOffBody:'维护者连接 GitHub Discussions 后，期刊讨论区会显示在这里。',guidelines:'阅读讨论规范',updated:'最近同步',contents:'本页目录',year:'全部年份'},
+  journal:{title:'聊聊投稿与发表。',intro:'选择一本期刊，阅读或分享投稿经验。也可以浏览期刊档案，找到论文并加入学术讨论。',filter:'查找期刊',all:'全部研究领域',noResults:'没有符合筛选条件的期刊。',archive:'历年期次',reviews:'期刊评论与投稿经验',reviewIntro:'欢迎分享亲身投稿经历，或提出建设性的问题。这里的内容是个人经验，不是官方期刊评价。',aiDisclosure:'由 AI Agent 撰写的评论须注明：written by AI Agent。',commentsOff:'评论功能尚未配置。',commentsOffBody:'维护者连接 GitHub Discussions 后，期刊讨论区会显示在这里。',guidelines:'阅读讨论规范',updated:'最近同步',contents:'本页目录',year:'全部年份'},
   search:{title:'让好奇心带路。',intro:'在目录中搜索期刊名称、论文标题、作者和 DOI。',placeholder:'论文标题、作者、期刊或 DOI',button:'搜索',journal:'全部期刊',year:'全部年份',type:'全部内容',start:'输入关键词，或选择筛选条件开始浏览。',empty:'没有找到匹配结果。请减少关键词或重置筛选条件。',failed:'搜索暂时无法加载，请重试。本地开发时，请先构建网站，再用 npm run preview 启用搜索索引。',more:'加载更多结果',loading:'正在搜索目录…',result:'条结果',reset:'重置筛选'},
   footer:{tagline:'发现研究，分享经验。',source:'开放元数据，追溯原始来源，保留独立观点。',sources:'数据来源',guidelines:'讨论规范',privacy:'隐私说明',issue:'报告错误',disclaimer:'独立项目，与 UT Dallas、INFORMS 及所列期刊无隶属关系。'},
   policy:{
@@ -25,6 +25,7 @@ export const zh: Translation<typeof copy> = {
     ]},
     guidelines:{title:'让下一次交流更有帮助。',eyebrow:'讨论规范',intro:'期刊讨论欢迎有分寸的投稿经验，论文讨论欢迎认真、有依据的学术交流。',sections:[
       ['分享亲身经历与研究见解','期刊讨论欢迎投稿时间线、编辑沟通、修改流程和建设性建议。论文讨论欢迎围绕方法、发现、解释和可重复性提供有依据的观点。适当补充大致日期和背景，并区分亲身经历、个人解读与可核实的事实。'],
+      ['标明 AI Agent 撰写的内容','如果评论或回复由 AI Agent 撰写，须在该条内容中明确注明“written by AI Agent”，保留这段英文原文。此要求同时适用于期刊和论文讨论。'],
       ['尊重他人与保密要求','请勿发布人身攻击、威胁、仇恨、垃圾广告、私人联系方式、保密稿件，或能够识别匿名审稿人的信息。避免无法证实的严重指控，也不要分享无权披露的材料。'],
       ['不要把个例当作统计','个人经历不是官方录用率、期刊排名或具有代表性的审稿时长估计。请说明具体投稿背景，避免据此推断所有作者或编辑的情况。'],
       ['公开交流与内容管理','评论、回复、Markdown 和表情回应由 GitHub Discussions 提供。维护者可以移除违规内容或锁定讨论，GitHub 的相关政策也同样适用。如需举报或申诉，请附上讨论链接联系维护者。']

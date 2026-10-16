@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
+import ArticleCard from '../../../../components/ArticleCard.astro';
+import {getManifest,getJournal} from '../../../../lib/catalog';
+import {href,journalUrl,reviewsUrl,onlineFirstUrl,ONLINE_FIRST_PAGE_SIZE} from '../../../../lib/urls';
+import {number} from '../../../../lib/formatting';
+import {copy} from '../../../../lib/copy';
+export function getStaticPaths() {
+  return getManifest().journals.flatMap(entry=>{
+    const journal=getJournal(entry.public_id);
+    const total=Math.max(1,Math.ceil(journal.online_first.length/ONLINE_FIRST_PAGE_SIZE));
+    return Array.from({length:total},(_,i)=>({params:{slug:entry.slug,page:String(i+1)},props:{id:entry.public_id}}));
+  });
+}
+const journal=getJournal(Astro.props.id);
+const page=Number(Astro.params.page);
+const total=Math.max(1,Math.ceil(journal.online_first.length/ONLINE_FIRST_PAGE_SIZE));
+const articles=journal.online_first.slice((page-1)*ONLINE_FIRST_PAGE_SIZE,page*ONLINE_FIRST_PAGE_SIZE);
+---
+<BaseLayout originalTitle title={`${journal.name} · Online First / Unassigned · ${page}`} description={`Unassigned article records for ${journal.name}, page ${page} of ${total}.`}>
+  <div class="container archive-page">
+    <Breadcrumbs items={[{label:copy.common.journals,url:href('journals/')},{label:journal.name,url:journalUrl(journal),original:true},{label:copy.common.online}]} />
+    <header class="page-intro compact-intro"><a class="eyebrow" data-original href={journalUrl(journal)}>{journal.name}</a><h1 class="online-title">{copy.common.online}</h1><p class="lead">{copy.common.onlineNote}</p><div class="archive-navigation"><a class="text-link" href={journalUrl(journal)}>Browse archive ←</a><a class="text-link" href={reviewsUrl(journal)}>Reviews & experiences →</a><span class="muted text-xs">{number(journal.online_first.length)} articles</span></div></header>
+    <section aria-label="Unassigned articles">{articles.length ? articles.map(article=><ArticleCard article={article} />) : <p class="empty-state">No unassigned articles in the current snapshot.</p>}</section>
+    {total>1 && <nav class="pagination" aria-label="Article pagination">{page>1 ? <a class="button secondary" href={onlineFirstUrl(journal,page-1)}>← Previous page</a> : <span></span>}<span class="pagination-status">Page {page} of {total}</span>{page<total ? <a class="button secondary" href={onlineFirstUrl(journal,page+1)}>Next page →</a> : <span></span>}</nav>}
+  </div>
+</BaseLayout>

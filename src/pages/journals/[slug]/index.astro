@@ -1,51 +1,42 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../../components/Breadcrumbs.astro';
-import IssueCard from '../../../components/IssueCard.astro';
-import ArticleCard from '../../../components/ArticleCard.astro';
-import GiscusComments from '../../../components/GiscusComments.astro';
 import {getManifest,getJournal} from '../../../lib/catalog';
-import {href,safeExternal} from '../../../lib/urls';
-import {date,number} from '../../../lib/formatting';
+import {href,reviewsUrl,yearUrl,onlineFirstUrl,safeExternal} from '../../../lib/urls';
+import {number} from '../../../lib/formatting';
 import {copy} from '../../../lib/copy';
 export function getStaticPaths() { return getManifest().journals.map(j=>({params:{slug:j.slug},props:{id:j.public_id}})); }
-const {id} = Astro.props;
-const journal = getJournal(id);
-const years = [...new Set(journal.issues.map(issue=>issue.publication_year).filter(Boolean))].sort((a,b)=>Number(b)-Number(a));
-const official = safeExternal(journal.homepage_url);
+const journal = getJournal(Astro.props.id);
+const groups = new Map<string,{issues:number;articles:number}>();
+for(const issue of journal.issues) {
+  const year = issue.publication_year ? String(issue.publication_year) : 'undated';
+  const group=groups.get(year) || {issues:0,articles:0};
+  group.issues++;group.articles+=issue.article_count;groups.set(year,group);
+}
+const years=[...groups.entries()].sort(([a],[b])=>a==='undated'?1:b==='undated'?-1:Number(b)-Number(a));
+const official=safeExternal(journal.homepage_url);
 ---
-<BaseLayout originalTitle title={journal.name} description={`Explore ${journal.name}: issue archive, article metadata, and public reviews of publishing experiences.`}>
-  <div class="container">
+<BaseLayout originalTitle title={journal.name} description={`Browse ${journal.name} by year, find articles, or join its independent reviews and submission experiences.`}>
+  <div class="container archive-page" data-review-url={reviewsUrl(journal)}>
     <Breadcrumbs items={[{label:copy.common.journals,url:href('journals/')},{label:journal.name,original:true}]} />
-    <header class="page-intro" data-pagefind-body>
+    <header class="page-intro compact-intro" data-pagefind-body>
       <span class="eyebrow" data-pagefind-filter="type">Journal</span>
       <h1 data-original lang="en" class="journal-title" data-pagefind-meta="title" data-pagefind-filter="journal">{journal.name}</h1>
-      <div class="journal-subtitle">{journal.abbreviation && <span class="badge" data-original>{journal.abbreviation}</span>}<span data-original>{journal.publisher}</span><span data-original>{journal.subject}</span><span>{number(journal.article_count)} articles</span></div>
-      <span class="sr-only" data-original>{journal.issns.join(' ')}</span>
-      <div class="article-actions" data-pagefind-ignore><a class="button" href="#reviews">Reviews & submission experiences ↓</a><a class="button secondary" href="#issues">Browse issues ↓</a></div>
+      <p class="journal-subtitle"><span data-original>{journal.publisher}</span>{journal.abbreviation && <span data-original>{journal.abbreviation}</span>}</p>
+      <span class="sr-only" data-original>{journal.issns.join(' ')} {journal.subject}</span>
+      <div class="article-actions" data-pagefind-ignore><a class="button" href={reviewsUrl(journal)}>Reviews & submission experiences →</a>{official && <a class="text-link" href={official} target="_blank" rel="noopener noreferrer">{copy.common.official} ↗</a>}</div>
     </header>
-    <div class="journal-layout">
-      <div>
-        <section class="content-section" id="issues">
-          <div class="section-heading"><h2>{copy.journal.archive}</h2>{years.length>1 && <select id="issue-year" aria-label="Filter issues by year"><option value="">{copy.journal.year}</option>{years.map(year=><option value={year!}>{year}</option>)}</select>}</div>
-          {journal.issues.length>0 ? <div class="issue-grid">{journal.issues.map(issue=><IssueCard journal={journal} issue={issue} />)}</div> : <p class="empty-state">{copy.common.noIssues}</p>}
-        </section>
-        <section class="content-section" id="online-first"><h2>{copy.common.online}</h2><p class="muted text-xs mt-3 mb-6">{copy.common.onlineNote}</p>{journal.online_first.length>0 ? journal.online_first.map(article=><ArticleCard article={article} />) : <p class="empty-state">No unassigned articles in the current snapshot.</p>}</section>
-        <GiscusComments entityType="journal" publicId={journal.public_id} />
-      </div>
-      <aside class="sidebar">
-        <h2>Journal information</h2>
-        <dl class="metadata"><div><dt>{copy.common.publisher}</dt><dd data-original={journal.publisher ? true : undefined}>{journal.publisher || 'Not recorded'}</dd></div><div><dt>{copy.common.field}</dt><dd data-original={journal.subject ? true : undefined}>{journal.subject || 'Not recorded'}</dd></div><div><dt>{copy.common.issn}</dt><dd data-original>{journal.issns.join(' / ')}</dd></div><div><dt>Collection window</dt><dd>{journal.start_year || 2006} onward</dd></div><div><dt>{copy.journal.updated}</dt><dd>{journal.last_synced_at ? <time datetime={journal.last_synced_at}>{date(journal.last_synced_at)}</time> : copy.common.notSynced}</dd></div></dl>
-        {official && <a class="text-link" href={official} target="_blank" rel="noopener noreferrer">{copy.common.official} ↗</a>}
-        <nav class="sidebar-nav" aria-label={copy.journal.contents}><a href="#issues">Issue archive ↓</a><a href="#online-first">Online First / Unassigned ↓</a><a href="#reviews">Reviews & experiences ↓</a></nav>
-        <p class="notice">{copy.common.coverage} <a class="text-link mt-2" href={href('data-sources/')}>Data & sources →</a></p>
-      </aside>
-    </div>
+    <section class="year-section" id="issues">
+      <div class="section-heading"><div><h2>Browse by year</h2><p>Select a year to see its issues.</p></div></div>
+      {years.length ? <div class="year-grid">{years.map(([year,group])=><a class="year-card" href={yearUrl(journal,year)}><span class="year-card-title">{year==='undated'?'Year not recorded':year}</span><span class="year-card-count">{number(group.issues)} issues <span aria-hidden="true">→</span></span></a>)}</div> : <p class="empty-state">{copy.common.noIssues}</p>}
+    </section>
+    <a class="online-link" href={onlineFirstUrl(journal)}><span>{copy.common.online}</span><span>{number(journal.online_first.length)} articles <span aria-hidden="true">→</span></span></a>
+    <p class="archive-note">{copy.common.coverage} <a class="text-link" href={href('data-sources/')}>Data & sources →</a></p>
   </div>
 </BaseLayout>
 <script>
-  document.querySelector<HTMLSelectElement>('#issue-year')?.addEventListener('change', event=> {
-    const year = (event.currentTarget as HTMLSelectElement).value;
-    document.querySelectorAll<HTMLElement>('[data-issue-year]').forEach(card=>{card.hidden = !!year && card.dataset.issueYear !== year;});
-  });
+  // Keep older bookmarks working after the journal discussion moved to its own page.
+  const reviewUrl=document.querySelector<HTMLElement>('[data-review-url]')?.dataset.reviewUrl;
+  const followLegacyReview=()=>{if(location.hash==='#reviews' && reviewUrl)location.replace(reviewUrl);};
+  followLegacyReview();window.addEventListener('hashchange',followLegacyReview);
 </script>

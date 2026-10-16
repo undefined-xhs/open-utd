@@ -33,6 +33,6 @@ const current = Astro.url.pathname;
     const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem('open-utd-theme', theme); } catch { /* Storage can be disabled. */ }
-    document.querySelector<HTMLIFrameElement>('.giscus-frame')?.contentWindow?.postMessage({giscus:{setConfig:{theme:theme === 'dark' ? 'dark' : 'light'}}}, 'https://giscus.app');
+    document.dispatchEvent(new CustomEvent('open-utd:theme'));
   });
 </script>

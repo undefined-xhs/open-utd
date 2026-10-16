@@ -2,41 +2,20 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SearchBox from '../components/SearchBox.astro';
 import JournalCard from '../components/JournalCard.astro';
-import {getJournals,getManifest} from '../lib/catalog';
-import {href,journalUrl} from '../lib/urls';
-import {date,number} from '../lib/formatting';
+import {getJournals} from '../lib/catalog';
 import {copy} from '../lib/copy';
 const journals = getJournals();
-const manifest = getManifest();
-const recent = [...journals].filter(j=>j.last_synced_at).sort((a,b)=>(b.last_synced_at || '').localeCompare(a.last_synced_at || '')).slice(0,4);
 ---
 <BaseLayout title={copy.name}>
   <div class="container">
-    <section class="hero">
-      <div>
-        <span class="eyebrow">{copy.home.eyebrow}</span>
-        <h1>Good research starts<br />with <em>discovery.</em></h1>
-        <p class="lead">{copy.home.lead}</p>
-        <SearchBox />
-        <p class="search-help">Explore ideas across {number(manifest.stats.articles)} articles and {number(manifest.stats.journals)} journals.</p>
-      </div>
-      <div class="hero-art" aria-hidden="true">
-        <div class="journal-book"><span class="book-label">An open research collection</span><span class="book-title">Ideas<br />worth<br />exploring.</span><span class="book-rule"></span><span class="book-bottom">Research · Reflection · Discovery</span></div>
-        <div class="journal-book secondary"><span class="book-label">Academic Journal Reviews</span><span class="book-title">Knowledge<br />is a shared<br />pursuit.</span><span class="book-rule"></span><span class="book-bottom">Collection / 2006 onward</span></div>
-        <span class="art-caption">A place for research, and the people behind it.</span>
-      </div>
+    <section class="comments-intro">
+      <h1>{copy.home.title}</h1>
+      <p class="lead">{copy.home.lead}</p>
+      <div class="paper-search"><label class="search-label" for="home-paper-search">Find a paper to discuss</label><SearchBox inputId="home-paper-search" /></div>
     </section>
-    <div class="fact-strip">
-      <span><b>{number(manifest.stats.journals)}</b> journals in the collection</span>
-      <span><b>{number(manifest.stats.articles)}</b> indexed articles</span>
-      <span><i class="status-dot"></i>{copy.home.scope}</span>
-      <span class="fact-update"><i class="status-dot"></i>{copy.home.update}</span>
-    </div>
-    <section class="section">
-      <div class="section-heading"><div><span class="eyebrow mb-3">Browse & discover</span><h2>{copy.home.collection}</h2><p>{copy.home.collectionNote}</p></div><a class="text-link" href={href('journals/')}>All journals <span aria-hidden="true">↗</span></a></div>
-      <div class="journal-grid">{journals.map((journal,index)=><JournalCard journal={journal} index={index} />)}</div>
+    <section class="journal-selection" aria-label="Journal reviews">
+      <h2>Choose a journal</h2>
+      <div class="journal-grid">{journals.map(journal=><JournalCard journal={journal} />)}</div>
     </section>
-    <aside class="context-panel"><div><span class="eyebrow mb-3">Beyond the bibliography</span><h2>{copy.home.note}</h2></div><div><p>{copy.home.noteBody}</p><a class="text-link" href={href('about/')}>About this project <span aria-hidden="true">→</span></a></div></aside>
-    {recent.length > 0 && <section class="section pt-0"><div class="section-heading"><div><h2>{copy.home.recent}</h2><p>{copy.home.recentNote}</p></div><a class="text-link" href={href('data-sources/')}>About the data →</a></div><div class="recent-grid">{recent.map(journal=><a class="recent-row" href={journalUrl(journal)}><span data-original>{journal.name}</span><time datetime={journal.last_synced_at!}>{date(journal.last_synced_at)}</time></a>)}</div></section>}
   </div>
 </BaseLayout>

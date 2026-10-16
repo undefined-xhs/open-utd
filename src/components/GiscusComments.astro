@@ -1,21 +1,25 @@
 ---
 import { copy } from '../lib/copy';
 import { href } from '../lib/urls';
-interface Props {entityType: 'journal' | 'article'; publicId:string;}
-const {entityType, publicId} = Astro.props;
+interface Props {entityType: 'journal' | 'article'; publicId:string; standalone?:boolean;}
+const {entityType, publicId, standalone = false} = Astro.props;
 const isJournal = entityType === 'journal';
 const repo = import.meta.env.PUBLIC_GISCUS_REPO;
 const repoId = import.meta.env.PUBLIC_GISCUS_REPO_ID;
 const category = import.meta.env.PUBLIC_GISCUS_CATEGORY || 'Journal Reviews';
 const categoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID;
 const configured = !!(repo && repoId && categoryId);
+// The iframe fetches these styles from the public site, including its Pages base path.
+const lightTheme = new URL(href('giscus-light.css'), Astro.site ?? Astro.url).href;
+const darkTheme = new URL(href('giscus-dark.css'), Astro.site ?? Astro.url).href;
 ---
 <section class="content-section" id={isJournal ? 'reviews' : 'discussion'} data-pagefind-ignore>
-  <span class="eyebrow mb-3">{isJournal ? 'The publishing experience' : 'Research in conversation'}</span>
+  {!standalone && <span class="eyebrow mb-3">{isJournal ? 'The publishing experience' : 'Research in conversation'}</span>}
   <h2>{isJournal ? copy.journal.reviews : 'Article discussion'}</h2>
   <p class="comments-info">{isJournal ? copy.journal.reviewIntro : 'Discuss the methods, findings, and questions raised by this paper. Share thoughtful comments, Markdown, and replies through GitHub.'}</p>
   <a class="text-link mt-3" href={href('guidelines/')}>{copy.journal.guidelines} →</a>
-  {configured ? <div class="giscus" data-giscus-host data-giscus-src="https://giscus.app/client.js" data-repo={repo} data-repo-id={repoId} data-category={category} data-category-id={categoryId} data-mapping="specific" data-term={`${entityType}:${publicId}`} data-strict="1" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-loading="lazy"></div> : <div class="comments-placeholder" data-discussion-term={`${entityType}:${publicId}`}><strong>{copy.journal.commentsOff}</strong><p>{isJournal ? copy.journal.commentsOffBody : 'An independent discussion for this article will appear once the maintainer connects GitHub Discussions.'}</p></div>}
+  <p class="comments-disclosure">{copy.journal.aiDisclosure}</p>
+  {configured ? <div class="giscus" data-giscus-host data-giscus-src="https://giscus.app/client.js" data-repo={repo} data-repo-id={repoId} data-category={category} data-category-id={categoryId} data-mapping="specific" data-term={`${entityType}:${publicId}`} data-strict="1" data-reactions-enabled="0" data-emit-metadata="0" data-input-position="top" data-loading="lazy" data-theme-light={lightTheme} data-theme-dark={darkTheme}></div> : <div class="comments-placeholder" data-discussion-term={`${entityType}:${publicId}`}><strong>{copy.journal.commentsOff}</strong><p>{isJournal ? copy.journal.commentsOffBody : 'An independent discussion for this article will appear once the maintainer connects GitHub Discussions.'}</p></div>}
   <noscript><p class="comments-info">Enable JavaScript to use the GitHub discussion.</p></noscript>
 </section>
 <script>
@@ -24,7 +28,9 @@ const configured = !!(repo && repoId && categoryId);
     // giscus reads data-lang when its client executes and builds /<lang>/widget.
     // Choose the saved locale before requesting the client, avoiding an English iframe flash.
     const locale = () => document.documentElement.lang === 'zh-CN' ? 'zh-CN' : 'en';
-    const theme = () => document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    const theme = () => document.documentElement.dataset.theme === 'dark'
+      ? host.dataset.themeDark || 'dark'
+      : host.dataset.themeLight || 'light';
     const client = document.createElement('script');
     client.src = 'https://giscus.app/client.js';
     client.async = true;
@@ -61,6 +67,12 @@ const configured = !!(repo && repoId && categoryId);
     const observer = new MutationObserver(syncFrame);
     observer.observe(host, {childList:true, subtree:true, attributes:true, attributeFilter:['src']});
     document.addEventListener('open-utd:language', syncFrame);
+    document.addEventListener('open-utd:theme', () => {
+      syncFrame();
+      host.querySelector<HTMLIFrameElement>('iframe.giscus-frame')?.contentWindow?.postMessage(
+        {giscus:{setConfig:{theme:theme()}}}, 'https://giscus.app'
+      );
+    });
     host.append(client);
   }
 </script>
