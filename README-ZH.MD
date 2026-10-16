@@ -101,9 +101,10 @@ npm run preview
 | --- | --- |
 | `ci.yml`：向 main 提交 PR / 手动运行 | 只读令牌、独立临时演示 DB、离线数据测试、生产快照校验（若存在）、类型检查、子路径构建、静态产物检查 |
 | `site.yml`：push main | 获取最新评论，使用已提交的生产数据库构建和部署，不请求 Crossref |
-| `site.yml`：评论新增、编辑、删除 / 每小时第 37 分钟 | 获取最新评论并重新部署；不请求 Crossref，不提交数据库 |
-| `site.yml`：每周一 02:23 UTC（北京时间 10:23） | Crossref 增量同步 → 校验 → 测试 → 评论快照 → 构建 → 上传 → 提交数据库 → 同一次运行部署 |
-| `site.yml`：手动运行 | 默认更新评论并部署；显式启用元数据同步后才采集 Crossref，历史导入需再打开 `initial_import`，可用 `journal` 只更新指定期刊 |
+| `site.yml`：评论新增、编辑、删除；讨论编辑、删除、转移或更改类别 | 完整获取评论后与线上 JSON 比较，无变化直接结束；有变化则复用 HTML 和 Pagefind 缓存，只替换评论文件 |
+| `site.yml`：每天 03:37 UTC（北京时间 11:37） | 执行同样的轻量评论补查，覆盖遗漏事件和管理操作；不请求 Crossref，不提交数据库 |
+| `site.yml`：每周一 02:23 UTC（北京时间 10:23） | Crossref 增量同步 → 校验 → 测试 → 评论快照 → 构建 → 提交数据库 → 上传 → 同一次运行部署 |
+| `site.yml`：手动运行 | 默认更新评论并部署；显式启用元数据同步后才采集 Crossref，历史导入需再打开 `initial_import`，可用 `journal` 只更新指定期刊；打开 `comments_only` 可改为轻量评论更新 |
 
 ### 当前配置与首次部署
 
@@ -116,7 +117,7 @@ npm run preview
 3. 在 **Settings → Secrets and variables → Actions → Secrets** 添加 `CROSSREF_MAILTO`，填写真实维护者联系邮箱。联系地址只保存在 Secret 中；无需 Crossref API key。
 4. 默认 GitHub Pages 地址无需添加变量。自定义域名时同时设置 Actions Variables：`PUBLIC_SITE_URL=https://your-domain.example`、`PUBLIC_BASE_PATH=/`，并在 Pages 设置中配置域名和 DNS。
 5. 打开 **Actions → Sync metadata and deploy Pages → Run workflow**，选 `main`。新仓库首次导入设置 `sync_metadata=true`、`initial_import=true`、`from_year=2006`，`journal` 留空以包含全部期刊。当前仓库已有正式快照，重新部署可保持 `sync_metadata=false`。历史导入需等待全部分页、校验及静态构建完成。同步成功后先保存一份保留 7 天的 Actions artifact（SQLite 与同步报告），后续构建或容量校验失败时仍可下载恢复，生产版本只在全部检查通过后更新。
-6. 查看运行 Summary 的资源指标、评论快照统计、提交后的 [`data/sync-report.md`](data/sync-report.md)、Pages 环境链接。后续普通代码推送、评论变动和每小时定时刷新评论，每周运行元数据增量同步。
+6. 查看运行 Summary 的资源指标、评论快照统计、提交后的 [`data/sync-report.md`](data/sync-report.md)、Pages 环境链接。普通代码推送在完整构建中刷新评论；评论变动和每天补查走轻量流程，每周运行元数据增量同步。
 
 如果仓库暂时没有真实生产快照，普通 push 部署会明确失败；运行一次手动历史导入后即可部署。工作流不会用演示论文填充正式站点。
 
@@ -158,9 +159,15 @@ Actions 使用固定窗口的 Crossref `from-index-date` / `until-index-date` �
 
 `/comments/` 汇总所有已收录期刊、论文讨论中的公开评论与回复，按**发表时间**倒序排列，每次显示 20 条。每条记录提供 GitHub 原评论永久链接及返回本站讨论区的入口；评论和作者名称保持原文。评论时间和快照更新时间按访问者浏览器所在时区显示（包含夏令时），并标注对应 GMT 偏移；日期格式随中英文界面切换。评论提交仍通过原讨论区进行。
 
-生产构建通过 [`scripts/fetch_comments.py`](scripts/fetch_comments.py) 只读访问 GitHub GraphQL API，读取当前 giscus 类别中标题精确匹配已知 `journal:<public_id>` / `article:<public_id>` 的讨论。脚本完整翻页获取评论和回复，老评论下的新回复也会出现；自动生成的 Discussion 开头正文不作为用户评论。已删除或被管理员折叠的评论正文不进入快照。每次重新采集会反映编辑、删除和管理操作，删除内容在网站上的消失时间取决于下次成功部署。
+完整构建和轻量评论更新均通过 [`scripts/fetch_comments.py`](scripts/fetch_comments.py) 只读访问 GitHub GraphQL API，读取当前 giscus 类别中标题精确匹配已知 `journal:<public_id>` / `article:<public_id>` 的讨论。脚本完整翻页获取评论和回复，老评论下的新回复也会出现；自动生成的 Discussion 开头正文不作为用户评论。已删除或被管理员折叠的评论正文不进入快照。每次重新采集会反映编辑、删除和管理操作，删除内容在网站上的消失时间取决于下次成功部署。
 
-评论事件触发刷新，另有每小时第 37 分钟的定时补查；GitHub 可能延迟事件或计划运行，因此这不是实时动态流。事件和每小时任务**只刷新评论并构建网站**，不会触发 Crossref 同步或数据库提交。GitHub 的 [`discussion_comment` 事件](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#discussion_comment)使用默认分支代码；当前官方文档仍将 Discussions webhook 标为公开预览。
+评论事件触发轻量刷新，每天 03:37 UTC（北京时间 11:37）补查一次；讨论删除、编辑、转移或更改类别也会触发检查。GitHub 可能延迟事件或计划运行，因此这不是实时动态流。这些运行不会触发 Crossref 同步或数据库提交。GitHub 的 [`discussion_comment` 事件](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#discussion_comment)使用默认分支代码；当前官方文档仍将 Discussions webhook 标为公开预览。
+
+[`scripts/comment_refresh.py`](scripts/comment_refresh.py) 将新采集的完整评论与已发布 JSON 比较，仅忽略采集时间。同时核对 `data/site-build.json` 的源码及配置标识，避免 GitHub 用较新的评论运行替换排队任务时，跳过尚未发布的代码更新。两者均无变化时，跳过 Node.js、依赖安装、缓存下载、构建、产物上传和部署。编辑、删除、新回复、作者或目标链接变化都会触发发布。页面显示的快照时间只在发布快照后更新，不代表最近一次“没有变化”的检查时间。网络请求失败会使运行失败，不会被当成“没有变化”。
+
+评论有变化时，从 Actions 缓存恢复经过验证的站点归档，只替换 `dist/data/comments.json`。HTML 和搜索索引直接复用，不运行 Astro、Pagefind 或全站链接扫描。缓存键包含准确的源码提交及公开站点/giscus 配置，并在元数据提交后计算，不会回退使用另一源码版本。缓存缺失或过期时自动回退到经过完整校验的正常构建。归档不含评论 JSON，避免恢复缓存时带回已删除评论。两种流程共用生产部署的串行队列。
+
+GitHub Pages 仍要求完整部署包，因此评论有变化时仍会上传并发布组装好的站点。Pages 产物保留 1 天；可复用归档使用单独的 Actions 缓存额度。源码/元数据更新、普通手动部署和缓存恢复仍需完整构建。手动刷新或验证评论流程时，运行 `site.yml`，设置 `comments_only=true`，关闭元数据选项即可。无需新增 Secret、外部服务或浏览器令牌。
 
 访问令牌仅在 Actions 采集步骤通过 `GITHUB_TOKEN` 使用，声明 `discussions: read`，不写入 JSON、HTML 或浏览器。`public/data/comments.json` 是忽略的构建文件，包含公开评论纯文本、作者、时间、原链接和本站目标；不提交评论副本到 Git 历史。当前工作流使用源码仓库自带令牌，迁移时优先保持评论与源码在同一仓库；独立评论仓库需另行配置具有该仓库只读权限的令牌或 GitHub App。
 

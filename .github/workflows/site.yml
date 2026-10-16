@@ -5,8 +5,15 @@ on:
     branches: [main]
   discussion_comment:
     types: [created, edited, deleted]
+  discussion:
+    types: [edited, deleted, transferred, category_changed]
   workflow_dispatch:
     inputs:
+      comments_only:
+        description: Refresh comments only (skip unchanged; reuse the built site)
+        required: true
+        type: boolean
+        default: false
       sync_metadata:
         description: Fetch and persist Crossref metadata before deployment
         required: true
@@ -30,8 +37,8 @@ on:
   schedule:
     # Monday 02:23 UTC = Monday 10:23 Asia/Shanghai. GitHub may delay scheduled runs.
     - cron: '23 2 * * 1'
-    # Refresh public comments hourly; this schedule never calls Crossref.
-    - cron: '37 * * * *'
+    # Daily fallback at 11:37 Asia/Shanghai; comment events handle normal updates.
+    - cron: '37 3 * * *'
 
 permissions: {}
 
@@ -49,6 +56,8 @@ jobs:
       contents: write # Only the validated sync snapshot step writes to main.
       pages: write # configure-pages reads repository Pages configuration.
       discussions: read # Server-side collection only; never exposed to the browser.
+    outputs:
+      publish: ${{ steps.plan.outputs.publish }}
     env:
       AJR_ENV: production
       AJR_DB_PATH: data/journals.sqlite
@@ -62,6 +71,7 @@ jobs:
       INPUT_INITIAL_IMPORT: ${{ inputs.initial_import || false }}
       INPUT_FROM_YEAR: ${{ inputs.from_year }}
       INPUT_JOURNAL: ${{ inputs.journal }}
+      COMMENTS_ONLY: ${{ github.event_name == 'discussion_comment' || github.event_name == 'discussion' || (github.event_name == 'schedule' && github.event.schedule == '37 3 * * *') || (github.event_name == 'workflow_dispatch' && inputs.comments_only == true) }}
       ASTRO_TELEMETRY_DISABLED: '1'
     steps:
       - name: Checkout current main
@@ -74,17 +84,6 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.12'
-
-      - name: Set up Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
-        with:
-          node-version: '24'
-          package-manager-cache: false
-
-      - name: Install dependencies
-        run: |
-          python -m pip install -e '.[dev]'
-          npm ci
 
       - name: Resolve site URL and base path
         shell: bash
@@ -105,6 +104,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [[ "$COMMENTS_ONLY" == true && ( "$INPUT_SYNC_METADATA" == true || "$INPUT_INITIAL_IMPORT" == true ) ]]; then
+            echo 'comments_only cannot be combined with metadata synchronization' >&2
+            exit 1
+          fi
           if [[ "$INPUT_INITIAL_IMPORT" == true && "$INPUT_SYNC_METADATA" != true ]]; then
             echo 'initial_import requires sync_metadata=true' >&2
             exit 1
@@ -117,6 +120,67 @@ jobs:
             echo 'journal must be blank or one registered lowercase journal slug' >&2
             exit 1
           fi
+
+      - name: Collect comments without installing build dependencies
+        if: env.COMMENTS_ONLY == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/fetch_comments.py
+
+      - name: Compare with the published comment content
+        id: changes
+        if: env.COMMENTS_ONLY == 'true'
+        run: python -m scripts.comment_refresh compare
+
+      - name: Identify the exact source and configuration cache
+        id: restore_key
+        if: env.COMMENTS_ONLY == 'true' && steps.changes.outputs.changed == 'true'
+        run: python -m scripts.comment_refresh cache-key >> "$GITHUB_OUTPUT"
+
+      - name: Restore verified HTML and search index
+        id: site_cache
+        if: env.COMMENTS_ONLY == 'true' && steps.changes.outputs.changed == 'true'
+        continue-on-error: true # Cache service failures also take the full-build fallback.
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: .artifacts/site-shell.tar
+          key: ${{ steps.restore_key.outputs.key }}
+
+      - name: Decide whether to publish or rebuild
+        id: plan
+        env:
+          COMMENTS_CHANGED: ${{ steps.changes.outputs.changed }}
+          CACHE_HIT: ${{ steps.site_cache.outputs.cache-hit }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          publish=true
+          full_build=true
+          if [[ "$COMMENTS_ONLY" == true ]]; then
+            if [[ "$COMMENTS_CHANGED" != true ]]; then
+              publish=false
+              full_build=false
+            elif [[ "$CACHE_HIT" == true ]]; then
+              full_build=false
+            else
+              echo 'Verified site cache unavailable; falling back to a full build.' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "full_build=$full_build" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        if: steps.plan.outputs.full_build == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Install dependencies
+        if: steps.plan.outputs.full_build == 'true'
+        run: |
+          python -m pip install -e '.[dev]'
+          npm ci
 
       - name: Synchronize metadata in a fixed Crossref index window
         if: (github.event_name == 'schedule' && github.event.schedule == '23 2 * * 1') || (github.event_name == 'workflow_dispatch' && inputs.sync_metadata == true)
@@ -160,6 +224,7 @@ jobs:
           if-no-files-found: error
 
       - name: Validate production data and test code
+        if: steps.plan.outputs.full_build == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -169,11 +234,13 @@ jobs:
           npm run check
 
       - name: Fetch complete public comment snapshot
+        if: steps.plan.outputs.full_build == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python scripts/fetch_comments.py
 
       - name: Build HTML and Pagefind, verify links, record resource limits
+        if: steps.plan.outputs.full_build == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -183,13 +250,15 @@ jobs:
           npm run test:site
           python scripts/build_metrics.py --db "$AJR_DB_PATH" --dist dist --build-seconds "$elapsed"
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
-
-      - name: Upload verified Pages artifact
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
-        with:
-          path: dist
+      - name: Replace only the comment JSON in the verified site
+        if: steps.plan.outputs.publish == 'true' && steps.plan.outputs.full_build == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          tar -xf .artifacts/site-shell.tar -C dist
+          python -m scripts.comment_refresh patch
+          echo 'Reused verified HTML and Pagefind. Updated only data/comments.json; no npm install, Astro build, indexing or full-site link scan.' >> "$GITHUB_STEP_SUMMARY"
 
       # GITHUB_TOKEN pushes do not trigger a second deployment workflow. This job
       # must finish successfully before the dependent deploy job publishes its artifact.
@@ -211,8 +280,43 @@ jobs:
             git push origin HEAD:main
           fi
 
+      - name: Record the built source and configuration
+        if: steps.plan.outputs.full_build == 'true'
+        run: python -m scripts.comment_refresh record-build
+
+      - name: Configure GitHub Pages
+        if: steps.plan.outputs.publish == 'true'
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+
+      - name: Upload verified Pages artifact
+        if: steps.plan.outputs.publish == 'true'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: dist
+          retention-days: 1
+
+      # Keep comments out of the reusable cache. A fresh complete feed is required
+      # before each publication; cached deleted comments can never be restored.
+      - name: Prepare verified site cache after any metadata commit
+        id: save_key
+        if: steps.plan.outputs.full_build == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .artifacts
+          tar --exclude='./data/comments.json' -cf .artifacts/site-shell.tar -C dist .
+          python -m scripts.comment_refresh cache-key >> "$GITHUB_OUTPUT"
+
+      - name: Save verified HTML and search index for comment refreshes
+        if: steps.plan.outputs.full_build == 'true'
+        continue-on-error: true # A cache outage must not block an otherwise valid deployment.
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: .artifacts/site-shell.tar
+          key: ${{ steps.save_key.outputs.key }}
+
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && needs.build.outputs.publish == 'true'
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
