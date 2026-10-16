@@ -1,18 +1,20 @@
 # open-utd · Academic Journal Reviews
 
-An open journal catalogue with searchable article metadata and discussions for journals and individual articles. Built with Python + SQLite, Astro + TypeScript + Tailwind CSS, Pagefind, and GitHub Actions / Pages. The interface supports English and 中文; original journal and article metadata stay in English.
+**English** · [简体中文](README-ZH.MD)
 
-项目仓库：[allenz-me/open-utd](https://github.com/allenz-me/open-utd) · 网站：[www.open-utd-hot-take.xyz](https://www.open-utd-hot-take.xyz/)。
+An open journal catalogue with searchable article metadata and discussions for journals and individual articles. Built with Python + SQLite, Astro + TypeScript + Tailwind CSS, Pagefind, and GitHub Actions / Pages. The interface supports English and Chinese; journal and article metadata remain in their original English.
 
-## 界面语言
+Repository: [allenz-me/open-utd](https://github.com/allenz-me/open-utd) · Website: [www.open-utd-hot-take.xyz](https://www.open-utd-hot-take.xyz/).
 
-页面提供 **English / 中文** 切换，涵盖导航、按钮、筛选、状态提示、政策说明和评论组件界面。语言偏好保存在当前浏览器的 `localStorage`（`open-utd-language`），刷新和跨页面导航后仍然有效；没有保存偏好时，中文浏览器使用中文，其他浏览器使用英文。禁用 JavaScript 时显示英文静态页面。
+## Interface languages
 
-**期刊名称、论文标题和作者署名始终保留来源英文原文，不作自动翻译。本站不展示或索引论文摘要。** 切换语言不会改变论文或期刊 URL、公开 ID、搜索数据或评论归属；giscus 界面对应切换为 `en` / `zh-CN`，已有评论内容保持原样。
+The **English / 中文** switch covers navigation, buttons, filters, status messages, policies, and the comment interface. The preference is saved in the current browser's `localStorage` under `open-utd-language` and persists across reloads and navigation. Without a saved preference, browsers configured for Chinese use Chinese; other browsers use English. The static fallback is English when JavaScript is disabled.
 
-## 收录范围
+**Journal names, article titles, and author names remain in the source English, without automatic translation. This site does not display or index article abstracts.** Switching languages does not change article or journal URLs, public IDs, search data, or discussion mappings. The giscus interface switches between `en` and `zh-CN`; existing comment text is unchanged.
 
-| Journal | Print ISSN | Electronic ISSN | 起始年份 |
+## Coverage
+
+| Journal | Print ISSN | Electronic ISSN | Start year |
 | --- | --- | --- | ---: |
 | Management Science | 0025-1909 | 1526-5501 | 2006 |
 | Information Systems Research | 1047-7047 | 1526-5536 | 2006 |
@@ -39,29 +41,31 @@ An open journal catalogue with searchable article metadata and discussions for j
 | Journal of International Business Studies | 0047-2506 | 1478-6990 | 2006 |
 | Strategic Management Journal | 0143-2095 | 1097-0266 | 2006 |
 
-期刊清单在 [`data/journal_registry.csv`](data/journal_registry.csv)。首次导入覆盖 2006 年起至运行时 Crossref 已收录的数据，之后按索引更新时间增量同步。网站显示的是 **Crossref 已登记的元数据**；登记延迟、缺失卷期和 Online First 记录意味着它不能保证与出版社“最新一期完整目录”同步。具体覆盖和同步结果见数据来源页及同步报告，最新期目录以出版社官方期刊页为准。合成演示数据有明确标记，生产校验拒绝演示数据。
+The journal registry is [`data/journal_registry.csv`](data/journal_registry.csv). An initial import covers records from 2006 through the data available in Crossref at the time of the run. Subsequent runs synchronize changes using Crossref's index timestamps. The website shows **metadata deposited with Crossref**. Deposit delays, missing issue information, and Online First records mean it cannot guarantee complete coverage of a publisher's latest issue. Consult the data sources page and synchronization report for coverage, and the publisher's journal website for its current table of contents. Synthetic demo data is clearly labelled and rejected by production validation.
 
-期刊范围采用 [UT Dallas 官方 24 刊名单](https://jsom.utdallas.edu/the-utd-top-100-business-school-research-rankings/index.php)。ISSN 与查询入口的核验依据见 [`data/journal-registry-sources.md`](data/journal-registry-sources.md)；当前期次、论文数量和各期刊采集结果以数据库及 [`data/sync-report.md`](data/sync-report.md) 为准。
+Crossref's `journal-article` category can also include book reviews, errata, indexes, and code or data companion records; not every record is a research article. The source classification is preserved. Deduplication by DOI also does not automatically merge duplicate publisher deposits that have different DOIs.
 
-## 浏览与讨论
+The collection follows the [official UT Dallas list of 24 journals](https://jsom.utdallas.edu/the-utd-top-100-business-school-research-rankings/index.php). Verification sources for ISSNs and query endpoints are recorded in [`data/journal-registry-sources.md`](data/journal-registry-sources.md). Use the database and [`data/sync-report.md`](data/sync-report.md) for current issue and article counts and each journal's collection results.
 
-首页点击期刊名称进入该刊的文献目录；卡片另有独立的**评论与投稿经验**按钮及浏览文献入口；期刊讨论集中在独立评论页。查找论文时，按“期刊 → 年份 → 期次 → 论文”逐层浏览；尚未分配期次的论文在单独的 Online First 列表中，每页 30 篇。
+## Browsing and discussions
 
-| 路径（站点 base path 之后） | 内容 |
+Clicking a journal name on the homepage opens its catalogue. Each card also has a separate **Reviews & experiences** button and an archive link; journal discussions have their own pages. Browse records through **journal → year → issue → article**. Records without an assigned issue appear in a separate Online First list, with 30 records per page.
+
+| Path, after the site's base path | Contents |
 | --- | --- |
-| `/journals/{slug}/` | 期刊概况、评论入口、年份网格 |
-| `/journals/{slug}/reviews/` | 该期刊的评论与投稿经验 |
-| `/journals/{slug}/years/{year}/` | 所选年份的期次；缺失年份使用 `undated` |
-| `/journals/{slug}/issues/{issueId}/` | 该期论文列表，沿用原期次 URL |
-| `/journals/{slug}/online-first/{page}/` | Online First / Unassigned 分页列表，页码从 1 开始 |
-| `/articles/{articleId}/` | 论文元数据及该论文的独立讨论，沿用原论文 URL |
-| `/comments/` | 期刊和论文的最新评论与回复，按发表时间倒序，附原评论链接 |
+| `/journals/{slug}/` | Journal overview, discussion link, and year grid |
+| `/journals/{slug}/reviews/` | Journal reviews and submission experiences |
+| `/journals/{slug}/years/{year}/` | Issues in the selected year; missing years use `undated` |
+| `/journals/{slug}/issues/{issueId}/` | Records in an issue; existing issue URLs are retained |
+| `/journals/{slug}/online-first/{page}/` | Paginated Online First / Unassigned records, starting at page 1 |
+| `/articles/{articleId}/` | Article metadata and its individual discussion; existing article URLs are retained |
+| `/comments/` | Latest comments and replies across journal and article discussions, newest first, with source permalinks |
 
-页面导航和评论组件支持中英文切换，文献元数据保持英文原文。网站检索仍可直接进入论文；年份和分页导航不改变已有论文、期次的公开 ID。
+Navigation and comment controls support both interface languages; bibliographic metadata remains in English. Search can take visitors directly to an article. Year and pagination routes do not change existing article or issue public IDs.
 
-## 本地运行：不需要 API key 或评论配置
+## Run locally without API keys or comment configuration
 
-需要 **Node.js 24**、**Python 3.12+**、Git。首次安装依赖需要网络；以下演示数据、测试和构建不会请求 Crossref/OpenAlex。
+Requirements: **Node.js 24**, **Python 3.12+**, and Git. Installing dependencies initially requires network access. The following demo, tests, and builds do not call Crossref or OpenAlex.
 
 ```bash
 git clone https://github.com/allenz-me/open-utd.git
@@ -85,84 +89,86 @@ npm run test:site
 npm run preview
 ```
 
-预览地址以终端输出为准。`npm run build` 顺序执行数据库导出、离线评论文件准备、Astro 静态构建、Pagefind 索引。首次本地构建会自动生成空评论文件，并明确显示“尚未同步”；已有评论快照不会被覆盖。需要恢复离线空状态时运行 `python scripts/fetch_comments.py --empty`。搜索需要构建产物，使用 `preview` 验证；`npm run dev` 适合修改页面，修改数据库后需重新导出或重启。
+Use the preview address printed in the terminal. `npm run build` exports the database, prepares an offline comment file if needed, builds the static Astro site, and creates the Pagefind index. The first local build creates an empty comment file explicitly marked as never synchronized; an existing comment snapshot is preserved. To reset to the offline empty state, run `python scripts/fetch_comments.py --empty`. Search requires a built index, so verify it with `preview`. Use `npm run dev` while editing pages; after changing the database, export it again or restart the development server.
 
-[`.env.example`](.env.example) 提供可选配置；复制为 `.env` 后 Astro 会读取公开配置，Python CLI 读取 shell 环境变量，需自行 `export`。不要将 `.env` 提交到 Git。Windows 可使用 WSL 运行以上命令；npm 数据导出脚本调用 `python3`，应确保它指向已安装依赖的 Python。
+[`.env.example`](.env.example) lists optional settings. Astro reads public configuration from a copied `.env` file, but the Python CLI reads shell environment variables, which must be set separately with `export`. Do not commit `.env`. Windows users can run these commands through WSL. The npm export script invokes `python3`, which must point to the Python environment with the project dependencies installed.
 
-## GitHub Actions 部署
+## Deploy with GitHub Actions
 
-仓库只有两个工作流：
+The repository has two workflows:
 
-| 工作流 / 事件 | 行为 |
+| Workflow / trigger | Behaviour |
 | --- | --- |
-| `ci.yml`：向 main 提交 PR / 手动运行 | 只读令牌、独立临时演示 DB、离线数据测试、生产快照校验（若存在）、类型检查、子路径构建、静态产物检查 |
-| `site.yml`：push main | 获取最新评论，使用已提交的生产数据库构建和部署，不请求 Crossref |
-| `site.yml`：评论新增、编辑、删除 / 每小时第 37 分钟 | 获取最新评论并重新部署；不请求 Crossref，不提交数据库 |
-| `site.yml`：每周一 02:23 UTC（北京时间 10:23） | Crossref 增量同步 → 校验 → 测试 → 评论快照 → 构建 → 上传 → 提交数据库 → 同一次运行部署 |
-| `site.yml`：手动运行 | 默认更新评论并部署；显式启用元数据同步后才采集 Crossref，历史导入需再打开 `initial_import`，可用 `journal` 只更新指定期刊 |
+| `ci.yml`: pull request targeting main / manual run | Read-only token, isolated temporary demo database, offline data tests, production snapshot validation when present, type checks, a subpath build, and static output checks |
+| `site.yml`: push to main | Fetch comments, build from the committed production database, and deploy without calling Crossref |
+| `site.yml`: comment created, edited, or deleted / minute 37 of every hour | Refresh comments and redeploy; no Crossref requests or database commits |
+| `site.yml`: Mondays at 02:23 UTC, 10:23 in Asia/Shanghai | Incremental Crossref synchronization → validation → tests → comment snapshot → build → upload → database commit → deployment in the same run |
+| `site.yml`: manual run | Refresh comments and deploy by default; Crossref runs only when metadata synchronization is enabled. Historical imports also require `initial_import`; `journal` can select one journal |
 
-### 当前配置与首次部署
+### Current configuration and first deployment
 
-公开仓库 `allenz-me/open-utd` 已创建，GitHub Pages 已选择 Actions 构建来源，`CROSSREF_MAILTO` 已保存为 Actions Secret；giscus App 已安装，Discussions 和四个公开评论变量已配置。重新部署此仓库无需重复这些设置。以下步骤也适用于 fork 或迁移到新仓库。
+The public `allenz-me/open-utd` repository is already configured to deploy Pages through Actions. `CROSSREF_MAILTO` is stored as an Actions Secret, the giscus App is installed, and Discussions plus the four public comment variables are configured. These steps do not need to be repeated when redeploying this repository. They also describe setup for a fork or a new repository.
 
-1. 仓库使用公开可见性和 `main` 默认分支。在 **Settings → Pages → Build and deployment** 选择 **GitHub Actions**。
-2. 在 **Settings → Actions → General** 允许所需 Actions。生产构建作业声明 `contents: write`，用于提交经过验证的 SQLite 快照；另需 `discussions: read` 读取公开评论。组织策略必须允许这些权限。
-3. 在 **Settings → Secrets and variables → Actions → Secrets** 添加 `CROSSREF_MAILTO`，填写真实维护者联系邮箱。联系地址只保存在 Secret 中；无需 Crossref API key。
-4. 默认 GitHub Pages 地址无需添加变量。自定义域名时同时设置 Actions Variables：`PUBLIC_SITE_URL=https://your-domain.example`、`PUBLIC_BASE_PATH=/`，并在 Pages 设置中配置域名和 DNS。
-5. 打开 **Actions → Sync metadata and deploy Pages → Run workflow**，选 `main`。新仓库首次导入设置 `sync_metadata=true`、`initial_import=true`、`from_year=2006`，`journal` 留空以包含全部期刊。当前仓库已有正式快照，重新部署可保持 `sync_metadata=false`。历史导入需等待全部分页、校验及静态构建完成。同步成功后先保存一份保留 7 天的 Actions artifact（SQLite 与同步报告），后续构建或容量校验失败时仍可下载恢复，生产版本只在全部检查通过后更新。
-6. 查看运行 Summary 的资源指标、评论快照统计、提交后的 [`data/sync-report.md`](data/sync-report.md)、Pages 环境链接。后续普通代码推送、评论变动和每小时定时刷新评论，每周运行元数据增量同步。
+1. Use a public repository with `main` as its default branch. In **Settings → Pages → Build and deployment**, select **GitHub Actions**.
+2. Allow the required Actions in **Settings → Actions → General**. The production build job declares `contents: write` to commit validated SQLite snapshots and `discussions: read` to collect public comments. Organization policies must permit these permissions.
+3. Add `CROSSREF_MAILTO` under **Settings → Secrets and variables → Actions → Secrets**, using a real maintainer contact email. The contact is stored only as a Secret; no Crossref API key is required.
+4. The default GitHub Pages address needs no additional variables. For a custom domain, set Actions Variables `PUBLIC_SITE_URL=https://your-domain.example` and `PUBLIC_BASE_PATH=/`, and configure the domain and DNS in Pages settings.
+5. Open **Actions → Sync metadata and deploy Pages → Run workflow** and select `main`. For a new repository's first import, set `sync_metadata=true`, `initial_import=true`, and `from_year=2006`; leave `journal` blank to include every journal. This repository already has a production snapshot, so a redeployment can leave `sync_metadata=false`. Historical imports must finish all API pages, validation, and the static build. After synchronization, an Actions artifact containing SQLite and the sync report is retained for seven days, allowing recovery if a later build or capacity check fails. The production snapshot is committed only after all checks pass.
+6. Review resource metrics and comment statistics in the run Summary, the committed [`data/sync-report.md`](data/sync-report.md), and the Pages environment link. Code pushes, comment events, and the hourly schedule refresh comments; the weekly schedule synchronizes metadata incrementally.
 
-如果仓库暂时没有真实生产快照，普通 push 部署会明确失败；运行一次手动历史导入后即可部署。工作流不会用演示论文填充正式站点。
+An ordinary push deployment fails explicitly if a real production snapshot is missing. Run the manual historical import once before deploying a new installation. Workflows never substitute demo records for production data.
 
-手动参数 `journal` 接受 registry 中的单个 slug（如 `marketing-science`），留空选择全部期刊。`from_year` 默认 `2006`，只在历史导入时使用；其值必须与所选每本期刊的 `start_year` 一致。将 `from_year` 留空时，各期刊分别使用自己的 registry 起始年份，适合将来收录范围不同的期刊。
+The manual `journal` input accepts one registry slug, such as `marketing-science`; blank selects all journals. `from_year` defaults to `2006` and is used only for historical imports. It must match every selected journal's `start_year`. Leave it blank to use each journal's registry year, which supports journals with different coverage windows.
 
-Actions 使用固定窗口的 Crossref `from-index-date` / `until-index-date` 和重叠区间捕获后续修订。增量同步还按新近发表日期补查一次，不限制起始索引日期，以补齐提前登记、后来才到发表日期的论文。只有完整成功才推进水位；同一 DOI 更新保留公开 ID。缺少初始水位的期刊必须先做历史导入。采集失败、数据校验失败、测试或构建失败、体积超限、Bot 提交失败都会阻止本次部署，已发布站点保留。若数据已提交但 Pages 服务部署失败，重新手动运行默认的“仅部署”即可。
+Crossref synchronization uses a fixed `from-index-date` / `until-index-date` window with overlap to capture revisions. Incremental runs also check recently published records without a lower index-date bound, catching records registered in advance of their publication date. Watermarks advance only after complete success, and DOI updates preserve public IDs. Journals without an initial watermark require a historical import first. Collection errors, validation or test failures, build failures, capacity limits, and rejected bot commits all prevent deployment; the published site remains available. If the database commit succeeds but Pages deployment fails, rerun the default manual deployment without metadata synchronization.
 
-同步和部署通过同一 concurrency group 串行执行。`GITHUB_TOKEN` 的数据提交不会触发另一个 push 工作流，因此部署就在当前运行完成。若有人在构建期间更新 main，Bot 的非快进推送会失败；拉取新代码后重跑，不进行 force push。
+Synchronization and deployment share one concurrency group. Database commits made with `GITHUB_TOKEN` do not trigger another push workflow, so deployment finishes in the same run. If main changes while the build is running, the bot's non-fast-forward push fails. Update to the latest code and rerun; do not force-push.
 
-## 期刊和论文评论：giscus + GitHub Discussions
+## Journal and article comments: giscus + GitHub Discussions
 
-每本期刊和每篇论文都有各自的公开讨论，支持 GitHub 登录、Markdown、回复和 Reaction。期刊讨论位于 `/journals/{slug}/reviews/`，用于投稿和审稿经历；论文讨论仍位于论文详情页，用于研究内容。评论保存在 GitHub Discussions。不做星级排名或未经验证的审稿统计。
+Every journal and article has its own public discussion, with GitHub sign-in, Markdown, replies, and reactions. Journal reviews and submission experiences live at `/journals/{slug}/reviews/`; article discussions remain on article detail pages. Comments are stored in GitHub Discussions. The site does not provide star rankings or unverified review statistics.
 
-当前评论服务已配置在 `allenz-me/open-utd` 的 **Announcements** 类别。公开配置如下；这些值是仓库和类别标识，不是凭据：
+The current comment service uses the **Announcements** category in `allenz-me/open-utd`. These public configuration values identify the repository and category; they are not credentials:
 
-| Actions Variable | 当前值 |
+| Actions Variable | Current value |
 | --- | --- |
 | `PUBLIC_GISCUS_REPO` | `allenz-me/open-utd` |
 | `PUBLIC_GISCUS_REPO_ID` | `R_kgDOVMBvww` |
 | `PUBLIC_GISCUS_CATEGORY` | `Announcements` |
 | `PUBLIC_GISCUS_CATEGORY_ID` | `DIC_kwDOVMBvw84DIl2E` |
 
-迁移或使用独立评论仓库时，需由仓库管理员完成新仓库的 giscus App 授权：
+When migrating or using a separate comment repository, its administrator must authorize the giscus App:
 
-1. 在目标公开评论仓库启用 **Discussions**，选择 Announcements 类型类别；可使用默认的 `Announcements`，或创建 `Journal Reviews`。
-2. 从 [giscus](https://giscus.app/) 安装 GitHub App，授权该仓库，取得真实 repo/category ID。
-3. 在网站源码仓库的 Actions **Variables** 设置 `PUBLIC_GISCUS_REPO`、`PUBLIC_GISCUS_REPO_ID`、`PUBLIC_GISCUS_CATEGORY`、`PUBLIC_GISCUS_CATEGORY_ID`。这些 ID 是公开配置，不是 Secrets。
-4. 手动运行 `site.yml`，保持 `sync_metadata=false`。部署后分别打开两本期刊的评论页和两篇论文详情页，使用真实账户确认 Markdown 评论、回复、Reaction，以及 Discussion 的隔离。
+1. Enable **Discussions** in the target public repository and choose an Announcements-type category. Use the default `Announcements` category or create `Journal Reviews`.
+2. Install the GitHub App from [giscus](https://giscus.app/), authorize the repository, and obtain its actual repository and category IDs.
+3. Set `PUBLIC_GISCUS_REPO`, `PUBLIC_GISCUS_REPO_ID`, `PUBLIC_GISCUS_CATEGORY`, and `PUBLIC_GISCUS_CATEGORY_ID` as Actions **Variables** in the website source repository. These IDs are public configuration, not Secrets.
+4. Run `site.yml` manually with `sync_metadata=false`. After deployment, open two journal review pages and two article pages. Use a real account to check Markdown comments, replies, reactions, and isolation between discussions.
 
-映射使用 `specific`、`strict=1`，期刊为 `journal:<journal.public_id>`，论文为 `article:<article.public_id>`，可以使用同一 Discussion 类别。期刊评论从概览页移到独立评论页后仍使用原映射，已有讨论继续保留。第一次评论时由 giscus 按需创建讨论，不预建数万条空 Discussion。期刊改名、域名调整或重新构建不改变讨论归属。不要删除再创建生产期刊来改名，也不要随意更换公开 `public_id`。配置缺失时显示评论尚未启用的说明，不加载无效 iframe。
+Mappings use `specific` and `strict=1`: `journal:<journal.public_id>` for journals and `article:<article.public_id>` for articles. Both can use the same Discussion category. Moving journal discussions from overview pages to dedicated review pages retains these mappings and existing conversations. giscus creates a Discussion when the first comment is posted; the project does not precreate thousands of empty threads. Renaming a journal, changing domains, or rebuilding does not change discussion identity. Do not delete and recreate a production journal to rename it, or casually change a public ID. Missing configuration produces an explanatory placeholder rather than an invalid iframe.
 
-评论编辑器主题位于 `public/giscus-light.css`、`public/giscus-dark.css` 和共用的 `public/giscus-editor.css`，随网站切换明暗模式。它们通过 giscus 官方自定义主题接口加载，地址由 `PUBLIC_SITE_URL` 与 `PUBLIC_BASE_PATH` 生成；本地预览也使用公开站点上的样式，因此主题修改需部署后才能在真实 iframe 中验证。
+The editor themes are `public/giscus-light.css`, `public/giscus-dark.css`, and the shared `public/giscus-editor.css`. They follow the site's light/dark setting through giscus's supported custom theme interface. Absolute stylesheet URLs are derived from `PUBLIC_SITE_URL` and `PUBLIC_BASE_PATH`. The iframe must be able to access the CSS with cross-origin loading permitted; local preview URLs may be affected by browser or network restrictions, so verify the final appearance after deployment.
 
-管理员通过 GitHub Discussions 删除、锁定和管理违规内容；以网站 `/guidelines/`、`/privacy/` 为准。公共纠错可提交 [GitHub Issue](https://github.com/allenz-me/open-utd/issues)，敏感信息和申诉请联系维护者，避免在公开评论中发布私人资料。
+Comments or replies written by an AI Agent must include the exact label `written by AI Agent`. This applies to both journal and article discussions.
 
-### 最新评论页
+Maintainers remove, lock, and moderate content through GitHub Discussions; see `/guidelines/` and `/privacy/` for site policies. Report public corrections through a [GitHub Issue](https://github.com/allenz-me/open-utd/issues). Contact the maintainer for sensitive information or appeals, and avoid posting private information in public comments.
 
-`/comments/` 汇总所有已收录期刊、论文讨论中的公开评论与回复，按**发表时间**倒序排列，每次显示 20 条。每条记录提供 GitHub 原评论永久链接及返回本站讨论区的入口；评论和作者名称保持原文。评论时间和快照更新时间按访问者浏览器所在时区显示（包含夏令时），并标注对应 GMT 偏移；日期格式随中英文界面切换。评论提交仍通过原讨论区进行。
+### Latest comments
 
-生产构建通过 [`scripts/fetch_comments.py`](scripts/fetch_comments.py) 只读访问 GitHub GraphQL API，读取当前 giscus 类别中标题精确匹配已知 `journal:<public_id>` / `article:<public_id>` 的讨论。脚本完整翻页获取评论和回复，老评论下的新回复也会出现；自动生成的 Discussion 开头正文不作为用户评论。已删除或被管理员折叠的评论正文不进入快照。每次重新采集会反映编辑、删除和管理操作，删除内容在网站上的消失时间取决于下次成功部署。
+`/comments/` collects public comments and replies from discussions for all catalogued journals and articles, ordered by **creation time**, newest first, with 20 entries shown at a time. Each entry links to the original GitHub comment and the corresponding discussion on this site. Comment text and author names remain unchanged. Comment and snapshot timestamps use the visitor's browser time zone, including daylight saving time, with the corresponding GMT offset. Date formatting follows the selected interface language. Visitors still post through the original discussion.
 
-评论事件触发刷新，另有每小时第 37 分钟的定时补查；GitHub 可能延迟事件或计划运行，因此这不是实时动态流。事件和每小时任务**只刷新评论并构建网站**，不会触发 Crossref 同步或数据库提交。GitHub 的 [`discussion_comment` 事件](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#discussion_comment)使用默认分支代码；当前官方文档仍将 Discussions webhook 标为公开预览。
+During production builds, [`scripts/fetch_comments.py`](scripts/fetch_comments.py) reads GitHub's GraphQL API. It includes discussions in the configured giscus category whose titles exactly match known `journal:<public_id>` or `article:<public_id>` mappings. It follows all comment and reply pages, including new replies to old comments. Automatically generated Discussion opening bodies are not treated as user comments. Deleted or moderator-minimized comment bodies are excluded. Each collection reflects edits, deletions, and moderation; removed content disappears from the website after the next successful deployment.
 
-访问令牌仅在 Actions 采集步骤通过 `GITHUB_TOKEN` 使用，声明 `discussions: read`，不写入 JSON、HTML 或浏览器。`public/data/comments.json` 是忽略的构建文件，包含公开评论纯文本、作者、时间、原链接和本站目标；不提交评论副本到 Git 历史。当前工作流使用源码仓库自带令牌，迁移时优先保持评论与源码在同一仓库；独立评论仓库需另行配置具有该仓库只读权限的令牌或 GitHub App。
+Comment events trigger a refresh, with an hourly check at minute 37 as a fallback. GitHub may delay events or scheduled runs, so this is not a real-time feed. Event and hourly jobs **only refresh comments and build the site**; they do not run Crossref synchronization or commit the database. GitHub's [`discussion_comment` event](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#discussion_comment) uses default-branch code; the official documentation currently marks Discussions webhooks as public preview.
 
-API 错误、部分响应、分页异常或预算耗尽会阻止本次部署，保留已发布站点，不以空评论伪装成功。默认每轮最多 400 次请求，运行 Summary 显示请求数和 GraphQL 消耗；JSON 超过 5 MiB 预警、20 MiB 失败。达到预算时应拆分评论文件或引入增量存储，不能截断后声称完整。接口和权限依据 [GitHub Discussions GraphQL 文档](https://docs.github.com/en/graphql/guides/using-the-graphql-api-for-discussions)及[官方速率限制](https://docs.github.com/en/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api)。
+The collection step uses `GITHUB_TOKEN` with `discussions: read` only inside Actions. The token is never written to JSON, HTML, or the browser. `public/data/comments.json` is an ignored build file containing public comment text, authors, timestamps, source links, and site destinations; comment copies are not committed to Git history. The workflow uses the source repository's token, so keeping source and comments in the same repository is the simplest migration path. A separate comment repository requires a separately configured token or GitHub App with read access to that repository.
 
-## 数据维护与增加期刊
+API errors, partial responses, pagination failures, or exhausted request budgets stop deployment and preserve the published site; they are not converted into a successful empty feed. Each run allows up to 400 requests by default. The Summary reports request count and GraphQL cost. A JSON snapshot over 5 MiB warns; over 20 MiB fails. If these budgets are reached, split the feed or add incremental storage rather than silently truncating it. API and permission details are documented in the [GitHub Discussions GraphQL guide](https://docs.github.com/en/graphql/guides/using-the-graphql-api-for-discussions) and [official rate limits](https://docs.github.com/en/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api).
 
-`data/journals.sqlite` 是受 Git 跟踪的正式快照；`.generated/`、`dist/`、`.local/` 是忽略的本地或构建文件。正式环境使用 `AJR_ENV=production`，演示始终使用独立 `AJR_DB_PATH`。不要以演示 seed、重建空库或回退 public ID 的方式修复正式数据。
+## Maintain data and add journals
 
-生产数据的本地操作示例：
+`data/journals.sqlite` is the production snapshot tracked in Git. `.generated/`, `dist/`, and `.local/` are ignored local or build outputs. Production uses `AJR_ENV=production`; demos always use a separate `AJR_DB_PATH`. Do not repair production data by seeding demo records, recreating an empty database, or reverting public IDs.
+
+Example local production workflow:
 
 ```bash
 export AJR_ENV=production
@@ -177,13 +183,13 @@ python scripts/cli.py stats
 npm run build
 ```
 
-请将示例邮箱替换为真实地址再联网。日常更新使用 `sync --provider crossref --mode incremental`。`sync --help` 列出 `--journal`、`--from-date`、`--to-date`、`--dry-run` 和请求限制选项。正式持久化导入必须覆盖每本期刊 registry 中 `start_year` 的 1 月 1 日至当前 UTC 日期；不同范围只能使用 `--dry-run` 检查。`--limit` 也仅用于 dry run，避免截断分页或局部年份导入被误记为完整成功。如果要调整正式起始年份，请先审核并修改 registry，再执行完整历史导入。
+Replace the example email with a real contact before making network requests. For routine updates, use `sync --provider crossref --mode incremental`. `sync --help` lists `--journal`, `--from-date`, `--to-date`, `--dry-run`, and request-limit options. Persisted production imports must cover January 1 of each journal's registry `start_year` through the current UTC date. Other date windows are available only with `--dry-run`. `--limit` also requires a dry run, preventing truncated pagination or partial-year imports from being recorded as complete. To change a production coverage start, review and update the registry before performing a full historical import.
 
-注册表中的 `crossref_issns` 是可选的 Crossref 查询入口集合，用分号分隔；留空时查询该刊全部已登记 ISSN。该字段只能包含该行的真实 ISSN，不改变完整的期刊 ISSN 展示或文章归属校验。仅在有明确来源证据时限制查询入口，例如 JAE、JFE 的真实电子 ISSN 尚无 Crossref journal endpoint；其他查询错误仍会中止同步。修改实际查询集合会使水位失效，必须重新执行完整历史导入。
+The optional registry field `crossref_issns` lists Crossref query endpoints, separated by semicolons. When blank, all registered ISSNs for that journal are queried. It may contain only actual ISSNs from the same row and does not alter the journal's complete displayed ISSN set or article-ownership checks. Restrict query endpoints only with clear source evidence: for example, the actual electronic ISSNs for JAE and JFE currently have no Crossref journal endpoint. Other query errors still stop synchronization. Changing the effective query set invalidates the watermark and requires a new full historical import.
 
-添加期刊时，先核实出版社和 Crossref ISSN，向 registry 增加一行，分配稳定 slug 并设置 `start_year`。提交注册表后，手动运行 `site.yml`，设置 `sync_metadata=true`、`initial_import=true`、`journal=new-journal-slug`，并将 `from_year` 改为该期刊的 `start_year`（或留空读取 registry）。这样只导入新增期刊，其他期刊的已有论文和公开 ID 保留。如果同一提交新增多本尚无数据的可见期刊，应将 `journal` 留空一并完成首次导入；不同期刊起始年份不一致时，`from_year` 也留空。
+To add a journal, verify its publisher and Crossref ISSNs, add a registry row, assign a stable slug, and set `start_year`. Commit the registry, then run `site.yml` manually with `sync_metadata=true`, `initial_import=true`, and `journal=new-journal-slug`. Set `from_year` to the journal's `start_year`, or leave it blank to read the registry. This imports only the new journal while preserving other journals' records and public IDs. If one commit adds several visible journals without data, leave `journal` blank to import all of them together. Also leave `from_year` blank if their start years differ.
 
-也可以在本地只导入新增期刊：
+Alternatively, import only the new journal locally:
 
 ```bash
 python scripts/cli.py seed --file data/journal_registry.csv
@@ -195,27 +201,27 @@ npm run build
 npm run test:site
 ```
 
-本地导入确认后一起提交 registry、SQLite 和同步报告，再由 main push 部署。不要直接把新期刊交给每周增量任务，缺少水位会安全失败。已有期刊修改 `start_year` 或增加 ISSN 后，旧水位也会失效，要求重新执行该期刊的历史导入，避免漏掉新范围内的旧论文；历史数据及公开 ID 保留。日后扩展不需要修改页面模板；如果发现错误 ISSN、跨期刊 DOI 冲突或期次歧义，应先审核源记录。
+After verifying the local import, commit the registry, SQLite snapshot, and sync report together; the main push deploys them. Do not leave a new journal to the weekly incremental job: a missing watermark fails safely. Changing an existing journal's `start_year` or adding an ISSN also invalidates its watermark and requires another historical import, preventing older records in the new range from being missed. Existing records and public IDs are retained. Adding journals does not require template changes. Review source records before resolving incorrect ISSNs, DOI conflicts across journals, or ambiguous issue assignments.
 
-## 数据质量与再使用
+## Data quality and reuse
 
-- 标题、作者顺序、DOI、卷期和日期来自源数据；只有年份的日期保持年份精度，不伪装成具体某天。
-- 没有足够卷期信息的论文列入 Online First / Unassigned。缺失信息保留缺失状态，不推测补全。
-- 同一规范化 DOI 至多一篇论文，记录更新保留 `public_id`；同名作者不在缺少可靠身份 ID 时自动合并。
-- 网站不展示论文摘要、摘要展开区或缺失摘要提示，也不将摘要写入 HTML、JSON-LD 或搜索索引；论文详情直接连接讨论区。通过原始来源链接阅读摘要与全文。采集器不请求摘要字段，公开 SQLite 及导出仍保留严格的权利校验，拒绝保存未获授权的摘要。
-- OpenAlex enrichment 目前不作为生产数据源启用，`OPENALEX_API_KEY` 只是预留配置；工作流不会请求它或产生额外 API 用量。
-- MIT 许可覆盖本项目源码和原创文档，不授予第三方摘要、出版社内容或用户评论的权利。
+- Titles, author order, DOIs, volume/issue information, and dates come from source deposits. A year-only date retains that precision rather than being presented as an exact day.
+- Records without sufficient volume and issue information appear under Online First / Unassigned. Missing information remains missing rather than being inferred.
+- Each normalized DOI identifies at most one article record. Updates retain its `public_id`; authors with the same name are not automatically merged without reliable identifiers.
+- The site has no abstract displays, expandable abstracts, or missing-abstract notices. Abstracts are excluded from HTML, JSON-LD, and the search index, and article details lead directly to discussion. Use the original-source link for abstracts and full text. The collector does not request abstract fields; the public SQLite snapshot and exports retain strict rights checks that reject unauthorized abstracts.
+- OpenAlex enrichment is not enabled as a production source. `OPENALEX_API_KEY` is reserved configuration; workflows do not call OpenAlex or incur additional API usage there.
+- The MIT license covers project code and original documentation. It does not grant rights to third-party abstracts, publisher content, or user comments.
 
-## 备份、恢复与迁移
+## Backups, recovery, and migrations
 
-每次成功同步都提交 DB 和报告，可用 Git 历史追溯。维护前先停止并发本地写入，使用 SQLite backup 创建一致性备份：
+The metadata workflow commits the database and report only after synchronization, validation, tests, and the build all succeed, providing a history of verified snapshots. A completed synchronization followed by a build failure retains its seven-day recovery artifact but does not update main. Before maintenance, stop concurrent local writes and use SQLite's backup API for a consistent copy:
 
 ```bash
 mkdir -p .local
 python -c 'import sqlite3; source=sqlite3.connect("data/journals.sqlite"); target=sqlite3.connect(".local/journals-backup.sqlite"); source.backup(target); target.close(); source.close()'
 ```
 
-把重要备份另存到仓库外。恢复时先备份当前文件，再选择已知正常的提交：
+Keep important backups outside the repository as well. To restore, first back up the current files, then choose a known-good commit:
 
 ```bash
 git log --oneline -- data/journals.sqlite
@@ -224,15 +230,15 @@ AJR_ENV=production AJR_DB_PATH=data/journals.sqlite python scripts/cli.py valida
 AJR_ENV=production AJR_DB_PATH=data/journals.sqlite npm run build
 ```
 
-验证恢复结果后提交恢复变更并 push；不要重写共享 Git 历史。若恢复的是较旧快照，请确认期间没有需要保留的新公开 ID。Discussions 评论存放在 GitHub，恢复数据库不会删除评论，但改变期刊 public ID 会使嵌入映射失联。
+After validating the restored data, commit and push the recovery change rather than rewriting shared Git history. If restoring an older snapshot, check whether newer public IDs need to be preserved. Comments live in GitHub Discussions, so restoring the database does not delete them; changing journal public IDs can disconnect their embedded mappings.
 
-数据库结构由 `data/migrations/` 管理，`db-init` 仅执行未应用迁移。新增迁移前备份；验证旧快照可升级，保留已有 ID、slug 和外键关系。
+Database migrations live in `data/migrations/`. `db-init` runs only unapplied migrations. Back up before introducing a migration and verify that existing snapshots upgrade while preserving IDs, slugs, and foreign-key relationships.
 
-## 规模指标与故障排查
+## Resource metrics and troubleshooting
 
-`python scripts/build_metrics.py --db data/journals.sqlite --dist dist --build-seconds 120` 会生成忽略的 `build-metrics.json` / `.md`。Actions 将报告写入运行 Summary，包含数据库体积、文章/期次/作者数量、HTML 页数、站点和 Pagefind 大小、构建耗时。
+`python scripts/build_metrics.py --db data/journals.sqlite --dist dist --build-seconds 120` generates ignored `build-metrics.json` and `.md` files. Actions adds the report to its run Summary, including database size, article/issue/author counts, HTML page count, site and Pagefind sizes, and build duration.
 
-扩充期刊前可按需运行离线规模检查（最大一档不会在每次 PR 中执行）：
+Before expanding the collection, run an offline scale check as needed. The largest fixture is not built on every pull request:
 
 ```bash
 export AJR_ENV=demo
@@ -248,32 +254,32 @@ for count in 10 100 1000 10000; do
 done
 ```
 
-此命令重建本地 `.generated/` 和 `dist/`，使用独立的合成数据文件；完成后把 `AJR_DB_PATH` 改回需要预览的数据库并重新构建。
+This rebuilds local `.generated/` and `dist/` using separate synthetic databases. Afterwards, restore `AJR_DB_PATH` to the database you want to preview and rebuild.
 
-| 指标 | 工程预警 | 阻止提交 / 部署 |
+| Metric | Engineering warning | Commit / deployment guard |
 | --- | --- | --- |
-| SQLite | 50 MB | 95 MB，提前迁移快照存储 |
-| 静态站点 | 500 MB | 900 MB，保留 Pages 容量余量 |
-| Pagefind | 50 MB | 结合站点总量限制 |
-| 构建耗时 | 5 分钟 | 作业有明确超时 |
+| SQLite | 50 MB | 95 MB; migrate snapshot storage before reaching the limit |
+| Static site | 500 MB | 900 MB, leaving headroom below the Pages limit |
+| Pagefind | 50 MB | Governed by the total site-size limit |
+| Build duration | 5 minutes | Jobs have explicit timeouts |
 
-这些是工程预算。[GitHub Pages 的官方限制](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits)包括站点不超过 1 GB、部署超过 10 分钟超时。达到预算应分析索引/页面成本，再迁移存储或采用 API 方案，同时保留已有 URL 与评论 ID；不能静默丢弃论文页面。
+These are project engineering budgets. [GitHub Pages' official limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits) include a 1 GB published-site limit and a 10-minute deployment timeout. When approaching a budget, inspect indexing and page costs before moving storage or introducing an API. Preserve existing URLs and comment IDs; do not silently drop article pages.
 
-| 现象 | 处理 |
+| Symptom | Action |
 | --- | --- |
-| `initial_import` / watermark 错误 | 手动启用同步和历史导入，`journal` 选择需要补导的期刊，`from_year` 匹配其 registry 起始年份或留空 |
-| Crossref 429 / 超时 / 分页失败 | 查看非敏感错误报告，稍后重跑；失败不会提交半成品快照 |
-| Bot push rejected | 检查 Actions 写权限、main 并发更新和分支保护，不能 force push |
-| main 禁止 Bot 直推 | 改用同步 PR → 人工审核合并 → main 部署流程，单独处理 Bot PR 测试触发；不要为此关闭保护 |
-| 页面正常但 CSS / 搜索 404 | 检查 `PUBLIC_SITE_URL` 与 `PUBLIC_BASE_PATH`；项目 Pages 默认 `/open-utd` |
-| 搜索在 dev 不工作 | 使用 `npm run build && npm run preview` |
-| 定时任务长时间未运行 | 检查 Actions 是否启用；公开仓库 60 天无活动可能停用 schedule，计划任务也可能延迟 |
-| 评论未启用 | 完成 giscus App 授权、Discussions 类别及四个公开变量，再重新部署 |
+| `initial_import` / watermark error | Run a manual historical synchronization, select the affected `journal`, and match `from_year` to its registry start year or leave it blank |
+| Crossref 429, timeout, or pagination failure | Review the non-sensitive error report and retry later; failed runs do not commit partial snapshots |
+| Bot push rejected | Check Actions write permissions, concurrent main updates, and branch protection; do not force-push |
+| Main prohibits direct bot pushes | Use a synchronization PR → human review and merge → main deployment flow, handling bot-PR test triggers explicitly; do not disable protection |
+| Pages load but CSS or search returns 404 | Check `PUBLIC_SITE_URL` and `PUBLIC_BASE_PATH`; the default project Pages path is `/open-utd` |
+| Search does not work in development mode | Use `npm run build && npm run preview` |
+| Scheduled jobs have not run for a long time | Check that Actions is enabled; schedules may be disabled after 60 days without activity in a public repository, and scheduled runs can be delayed |
+| Comments are not enabled | Complete giscus App authorization, configure the Discussions category and four public variables, then redeploy |
 
-## 工程说明
+## Engineering notes
 
-数据流：Crossref → SQLite → 分片 JSON → Astro 静态 HTML → Pagefind → GitHub Pages。浏览器只接收静态页面与搜索索引，SQLite 不作为网站资源发布。无需服务器、用户数据库或付费服务；真实评论功能需要 GitHub 账户。
+Data flows from Crossref → SQLite → JSON shards → Astro static HTML → Pagefind → GitHub Pages. Browsers receive static pages, the search index, and public comment JSON; the comment widget loads separately from giscus. SQLite is not published as a website asset. No self-hosted application server or user database is required; posting comments requires a GitHub account.
 
-使用 Node 24、Python 3.12 的 GitHub 托管 runner。官方 Actions 已核对并固定到具体 commit；升级时需重新检查版本与权限：[checkout](https://github.com/actions/checkout)、[setup-node](https://github.com/actions/setup-node)、[setup-python](https://github.com/actions/setup-python)、[configure-pages](https://github.com/actions/configure-pages)、[upload-pages-artifact](https://github.com/actions/upload-pages-artifact)、[deploy-pages](https://github.com/actions/deploy-pages)。Pages 配置使用 v6，上传与部署使用 v5；部分官方示例仍显示旧版，不照抄示例中的版本号。
+GitHub-hosted runners use Node 24 and Python 3.12. Official Actions are pinned to specific commits; review their versions and permissions when upgrading: [checkout](https://github.com/actions/checkout), [setup-node](https://github.com/actions/setup-node), [setup-python](https://github.com/actions/setup-python), [configure-pages](https://github.com/actions/configure-pages), [upload-pages-artifact](https://github.com/actions/upload-pages-artifact), and [deploy-pages](https://github.com/actions/deploy-pages). The current configuration uses Pages configuration v6 and upload/deployment v5. Some official examples show older versions, so do not copy version numbers without checking.
 
-更多设计背景见[技术路线](academic-journal-reviews-technical-roadmap-github-actions.md)。实现以可运行代码和本 README 为准。人工验收仍包括真实 giscus 账户的评论/回复测试，以及把当前 Crossref 覆盖情况与出版社最新期目录进行核对。
+The [technical roadmap](academic-journal-reviews-technical-roadmap-github-actions.md) provides design background. The executable implementation and this README describe current behaviour. Manual acceptance checks still include posting and replying with a real giscus account and comparing Crossref coverage with the publisher's latest issue contents.
