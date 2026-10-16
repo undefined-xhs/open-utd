@@ -2,7 +2,7 @@
 
 An open journal catalogue with searchable article metadata and discussions for journals and individual articles. Built with Python + SQLite, Astro + TypeScript + Tailwind CSS, Pagefind, and GitHub Actions / Pages. The interface supports English and 中文; original journal and article metadata stay in English.
 
-项目仓库：[allenz-me/open-utd](https://github.com/allenz-me/open-utd) · 网站：[allenz-me.github.io/open-utd](https://allenz-me.github.io/open-utd/)。
+项目仓库：[allenz-me/open-utd](https://github.com/allenz-me/open-utd) · 网站：[www.open-utd-hot-take.xyz](https://www.open-utd-hot-take.xyz/)。
 
 ## 界面语言
 
