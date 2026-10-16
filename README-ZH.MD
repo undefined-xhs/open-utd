@@ -163,9 +163,9 @@ Actions 使用固定窗口的 Crossref `from-index-date` / `until-index-date` �
 
 评论事件触发轻量刷新，每天 03:37 UTC（北京时间 11:37）补查一次；讨论删除、编辑、转移或更改类别也会触发检查。GitHub 可能延迟事件或计划运行，因此这不是实时动态流。这些运行不会触发 Crossref 同步或数据库提交。GitHub 的 [`discussion_comment` 事件](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#discussion_comment)使用默认分支代码；当前官方文档仍将 Discussions webhook 标为公开预览。
 
-[`scripts/comment_refresh.py`](scripts/comment_refresh.py) 将新采集的完整评论与已发布 JSON 比较，仅忽略采集时间。同时核对 `data/site-build.json` 的源码及配置标识，避免 GitHub 用较新的评论运行替换排队任务时，跳过尚未发布的代码更新。两者均无变化时，跳过 Node.js、依赖安装、缓存下载、构建、产物上传和部署。编辑、删除、新回复、作者或目标链接变化都会触发发布。页面显示的快照时间只在发布快照后更新，不代表最近一次“没有变化”的检查时间。网络请求失败会使运行失败，不会被当成“没有变化”。
+[`scripts/comment_refresh.py`](scripts/comment_refresh.py) 将新采集的完整评论与已发布 JSON 比较，仅忽略采集时间。同时核对 `data/site-build.json` 的源码及配置标识，避免 GitHub 用较新的评论运行替换排队任务时，跳过尚未发布的代码更新。两者均无变化且可复用缓存可用时，跳过 Node.js、依赖安装、缓存下载、构建、产物上传和部署。编辑、删除、新回复、作者或目标链接变化都会触发发布。页面显示的快照时间只在发布快照后更新，不代表最近一次“没有变化”的检查时间。网络请求失败会使运行失败，不会被当成“没有变化”。
 
-评论有变化时，从 Actions 缓存恢复经过验证的站点归档，只替换 `dist/data/comments.json`。HTML 和搜索索引直接复用，不运行 Astro、Pagefind 或全站链接扫描。缓存键包含准确的源码提交及公开站点/giscus 配置，并在元数据提交后计算，不会回退使用另一源码版本。缓存缺失或过期时自动回退到经过完整校验的正常构建。归档不含评论 JSON，避免恢复缓存时带回已删除评论。两种流程共用生产部署的串行队列。
+评论有变化时，从 Actions 缓存恢复经过验证的站点归档，只替换 `dist/data/comments.json`。HTML 和搜索索引直接复用，不运行 Astro、Pagefind 或全站链接扫描。缓存键包含准确的源码提交及公开站点/giscus 配置，并在元数据提交后计算，不会回退使用另一源码版本。缓存缺失或过期时自动回退到经过完整校验的正常构建。归档不含评论 JSON，避免恢复缓存时带回已删除评论。两种流程共用生产部署的串行队列。GitHub 允许讨论事件读取缓存，但不允许保存；缓存写入因此仅由代码推送、定时和手动任务负责。每天补查或手动检查发现内容未变化时，仅查询缓存是否存在，不下载归档；缓存缺失则重建。可信任务修复缓存前，评论事件保留完整构建兜底。整个方案使用现有权限，保留 GitHub 默认缓存权限限制。
 
 GitHub Pages 仍要求完整部署包，因此评论有变化时仍会上传并发布组装好的站点。Pages 产物保留 1 天；可复用归档使用单独的 Actions 缓存额度。源码/元数据更新、普通手动部署和缓存恢复仍需完整构建。手动刷新或验证评论流程时，运行 `site.yml`，设置 `comments_only=true`，关闭元数据选项即可。无需新增 Secret、外部服务或浏览器令牌。
 

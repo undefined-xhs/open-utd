@@ -128,7 +128,7 @@ def main():
     if os.getenv("GITHUB_OUTPUT"):
         with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as handle:
             handle.write(f"changed={str(needs_publish).lower()}\n")
-    message = "Comments or site version changed; publication required." if needs_publish else "No comment or site version changes; skipped dependencies, cache download, build and deployment."
+    message = "Comments or site version changed; publication required." if needs_publish else "Comments and site version unchanged. Scheduled/manual checks will also verify cache availability."
     print(message)
     if os.getenv("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:

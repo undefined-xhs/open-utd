@@ -71,6 +71,7 @@ jobs:
       INPUT_INITIAL_IMPORT: ${{ inputs.initial_import || false }}
       INPUT_FROM_YEAR: ${{ inputs.from_year }}
       INPUT_JOURNAL: ${{ inputs.journal }}
+      COMMENT_EVENT: ${{ github.event_name == 'discussion_comment' || github.event_name == 'discussion' }}
       COMMENTS_ONLY: ${{ github.event_name == 'discussion_comment' || github.event_name == 'discussion' || (github.event_name == 'schedule' && github.event.schedule == '37 3 * * *') || (github.event_name == 'workflow_dispatch' && inputs.comments_only == true) }}
       ASTRO_TELEMETRY_DISABLED: '1'
     steps:
@@ -134,17 +135,19 @@ jobs:
 
       - name: Identify the exact source and configuration cache
         id: restore_key
-        if: env.COMMENTS_ONLY == 'true' && steps.changes.outputs.changed == 'true'
+        if: env.COMMENTS_ONLY == 'true' && (steps.changes.outputs.changed == 'true' || env.COMMENT_EVENT != 'true')
         run: python -m scripts.comment_refresh cache-key >> "$GITHUB_OUTPUT"
 
       - name: Restore verified HTML and search index
         id: site_cache
-        if: env.COMMENTS_ONLY == 'true' && steps.changes.outputs.changed == 'true'
+        if: env.COMMENTS_ONLY == 'true' && (steps.changes.outputs.changed == 'true' || env.COMMENT_EVENT != 'true')
         continue-on-error: true # Cache service failures also take the full-build fallback.
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: .artifacts/site-shell.tar
           key: ${{ steps.restore_key.outputs.key }}
+          # Daily/manual no-change checks inspect availability without downloading.
+          lookup-only: ${{ steps.changes.outputs.changed != 'true' }}
 
       - name: Decide whether to publish or rebuild
         id: plan
@@ -158,8 +161,12 @@ jobs:
           full_build=true
           if [[ "$COMMENTS_ONLY" == true ]]; then
             if [[ "$COMMENTS_CHANGED" != true ]]; then
-              publish=false
-              full_build=false
+              if [[ "$COMMENT_EVENT" != true && "$CACHE_HIT" != true ]]; then
+                echo 'Comment content unchanged, but the site cache is missing; rebuilding it in this trusted scheduled/manual run.' >> "$GITHUB_STEP_SUMMARY"
+              else
+                publish=false
+                full_build=false
+              fi
             elif [[ "$CACHE_HIT" == true ]]; then
               full_build=false
             else
@@ -168,6 +175,9 @@ jobs:
           fi
           echo "publish=$publish" >> "$GITHUB_OUTPUT"
           echo "full_build=$full_build" >> "$GITHUB_OUTPUT"
+          if [[ "$publish" == false ]]; then
+            echo 'No changes; skipped dependencies, cache download, build and deployment.' >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Set up Node.js
         if: steps.plan.outputs.full_build == 'true'
@@ -299,7 +309,7 @@ jobs:
       # before each publication; cached deleted comments can never be restored.
       - name: Prepare verified site cache after any metadata commit
         id: save_key
-        if: steps.plan.outputs.full_build == 'true'
+        if: steps.plan.outputs.full_build == 'true' && env.COMMENT_EVENT != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -308,7 +318,9 @@ jobs:
           python -m scripts.comment_refresh cache-key >> "$GITHUB_OUTPUT"
 
       - name: Save verified HTML and search index for comment refreshes
-        if: steps.plan.outputs.full_build == 'true'
+        # GitHub permits default-branch cache writes on push/schedule/manual runs,
+        # while discussion events remain restore-only under the default policy.
+        if: steps.plan.outputs.full_build == 'true' && env.COMMENT_EVENT != 'true'
         continue-on-error: true # A cache outage must not block an otherwise valid deployment.
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
