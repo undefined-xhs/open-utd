@@ -1,0 +1,38 @@
+---
+import { href, repositoryUrl } from '../lib/urls';
+import { copy } from '../lib/copy';
+const current = Astro.url.pathname;
+---
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header" data-pagefind-ignore>
+  <div class="container header-inner">
+    <a class="brand" href={href()} aria-label={`${copy.name} home`}>
+      <img class="brand-mark" src={href('favicon.svg')} width="35" height="35" alt="" />
+      <span class="brand-name">{copy.name}<span class="brand-sub">{copy.fullName}</span></span>
+    </a>
+    <nav class="header-nav" aria-label="Main navigation">
+      {(['journals','search','about'] as const).map(key => <a href={href(`${key}/`)} aria-current={current.includes(`/${key}/`) ? 'page' : undefined}>{copy.nav[key]}</a>)}
+      <a class="github-nav" href={repositoryUrl} target="_blank" rel="noopener noreferrer">{copy.nav.github} ↗</a>
+    </nav>
+    <div class="language-switch" role="group" aria-label="Interface language">
+      <button type="button" data-set-language="en" lang="en" aria-label="Use English interface" aria-pressed="true">EN</button>
+      <span aria-hidden="true">/</span>
+      <button type="button" data-set-language="zh-CN" lang="zh-CN" aria-label="使用中文界面" aria-pressed="false">中文</button>
+    </div>
+    <button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme" id="theme-toggle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20.8 13.2A9 9 0 0 1 10.8 3.2a9 9 0 1 0 10 10Z"/></svg>
+    </button>
+  </div>
+</header>
+<script>
+  import {currentLocale, setLocale} from '../lib/i18n';
+  document.querySelectorAll<HTMLButtonElement>('[data-set-language]').forEach(button=>button.addEventListener('click',()=>setLocale(button.dataset.setLanguage === 'zh-CN' ? 'zh-CN' : 'en')));
+  setLocale(currentLocale());
+  const toggle = document.querySelector<HTMLButtonElement>('#theme-toggle');
+  toggle?.addEventListener('click', () => {
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+    try { localStorage.setItem('open-utd-theme', theme); } catch { /* Storage can be disabled. */ }
+    document.querySelector<HTMLIFrameElement>('.giscus-frame')?.contentWindow?.postMessage({giscus:{setConfig:{theme:theme === 'dark' ? 'dark' : 'light'}}}, 'https://giscus.app');
+  });
+</script>

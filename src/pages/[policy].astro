@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import {copy} from '../lib/copy';
+import {repositoryUrl} from '../lib/urls';
+import {getManifest} from '../lib/catalog';
+import {date,number} from '../lib/formatting';
+export function getStaticPaths() { return Object.keys(copy.policy).map(policy=>({params:{policy}})); }
+const key = Astro.params.policy as keyof typeof copy.policy;
+const page = copy.policy[key];
+const manifest = getManifest();
+---
+<BaseLayout title={page.eyebrow} description={page.intro}>
+  <div class="container prose-layout">
+    <Breadcrumbs items={[{label:page.eyebrow}]} />
+    <div class="page-intro"><span class="eyebrow">{page.eyebrow}</span><h1>{page.title}</h1><p class="lead">{page.intro}</p></div>
+    {key === 'data-sources' && <div class="notice" data-ui-dynamic data-snapshot={JSON.stringify({...manifest.stats,updated:manifest.updated_at || ''})}>Current snapshot: {number(manifest.stats.journals)} journals · {number(manifest.stats.issues)} issues · {number(manifest.stats.articles)} articles. Metadata updated: {date(manifest.updated_at)}.</div>}
+    <div class="prose">{page.sections.map(([title,body])=><section><h2>{title}</h2><p>{body}</p></section>)}
+      <section><h2>Contact & references</h2><p><a href={`${repositoryUrl}/issues`} target="_blank" rel="noopener noreferrer">Project issues ↗</a> · <a href="mailto:undefined_xhs@qq.com">Contact the maintainer</a></p>{key === 'data-sources' && <p class="mt-3"><a href="https://www.crossref.org/documentation/retrieve-metadata/rest-api/" target="_blank" rel="noopener noreferrer">Crossref REST API ↗</a> · <a href="https://www.crossref.org/documentation/retrieve-metadata/" target="_blank" rel="noopener noreferrer">Crossref metadata reuse ↗</a> · <a href="https://docs.openalex.org/" target="_blank" rel="noopener noreferrer">OpenAlex documentation ↗</a></p>}{key === 'privacy' && <p class="mt-3"><a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">GitHub privacy statement ↗</a> · <a href="https://github.com/giscus/giscus/blob/main/PRIVACY-POLICY.md" target="_blank" rel="noopener noreferrer">giscus privacy policy ↗</a></p>}</section>
+    </div>
+  </div>
+</BaseLayout>

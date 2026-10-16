@@ -1,0 +1,5 @@
+public_id,slug,name,abbreviation,issn_l,issn_print,issn_electronic,publisher,subject,homepage_url,start_year,is_visible
+j_management_science,management-science,Management Science,MS,0025-1909,0025-1909,1526-5501,INFORMS,Management,https://pubsonline.informs.org/journal/mnsc,2006,1
+j_information_systems_research,information-systems-research,Information Systems Research,ISR,1047-7047,1047-7047,1526-5536,INFORMS,Information Systems,https://pubsonline.informs.org/journal/isre,2006,1
+j_marketing_science,marketing-science,Marketing Science,MktSci,0732-2399,0732-2399,1526-548X,INFORMS,Marketing,https://pubsonline.informs.org/journal/mksc,2006,1
+j_operations_research,operations-research,Operations Research,OR,0030-364X,0030-364X,1526-5463,INFORMS,Operations Research,https://pubsonline.informs.org/journal/opre,2006,1

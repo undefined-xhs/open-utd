@@ -1,0 +1,104 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import {getJournals} from '../lib/catalog';
+import {copy} from '../lib/copy';
+import {href,basePath} from '../lib/urls';
+const journals = getJournals();
+---
+<BaseLayout title="Search the catalog" noindex>
+  <div class="container search-page">
+    <Breadcrumbs items={[{label:'Search'}]} />
+    <div class="page-intro"><span class="eyebrow">Search the collection</span><h1>{copy.search.title}</h1><p class="lead">{copy.search.intro}</p></div>
+    <div id="catalog-search" class="search-main" data-bundle={href('pagefind/pagefind.js')} data-base={basePath} data-copy={JSON.stringify(copy.search)}>
+      <form id="search-form" role="search" class="search-box"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="search-input" type="search" name="q" aria-label={copy.search.placeholder} placeholder={copy.search.placeholder} autocomplete="off" /><button type="submit" aria-label={copy.search.button}>↗</button></form>
+      <div class="search-filters"><select id="search-journal" aria-label="Filter by journal"><option value="">{copy.search.journal}</option>{journals.map(j=><option data-original value={j.name}>{j.name}</option>)}</select><select id="search-year" aria-label="Filter by publication year"><option value="">{copy.search.year}</option></select><select id="search-type" aria-label="Filter by content type"><option value="">{copy.search.type}</option><option value="Article">Article</option><option value="Journal">Journal</option></select><button id="search-reset" type="button">{copy.search.reset}</button></div>
+      <p data-ui-dynamic id="search-status" class="search-status" role="status" aria-live="polite">{copy.search.start}</p>
+      <ol data-ui-dynamic id="search-results" class="search-results" aria-label="Search results"></ol>
+      <button id="search-more" class="button secondary search-more" type="button" hidden>{copy.search.more}</button>
+      <noscript><p class="notice">Search requires JavaScript. You can still <a href={href('journals/')}>browse every journal and issue</a>.</p></noscript>
+    </div>
+  </div>
+</BaseLayout>
+<script>
+  import {currentLocale, translate} from '../lib/i18n';
+  interface SearchResult { url:string; meta:{title?:string}; plain_excerpt:string; filters?:Record<string,string[]>; }
+  interface SearchHit { data:()=>Promise<SearchResult>; }
+  interface Pagefind { options:(options:{baseUrl:string})=>Promise<void>; filters:()=>Promise<Record<string,Record<string,number>>>; search:(query:string|null,options:{filters:Record<string,string>})=>Promise<{results:SearchHit[]}>; }
+  const root = document.querySelector<HTMLElement>('#catalog-search')!;
+  const strings = JSON.parse(root.dataset.copy!) as Record<string,string>;
+  const input = document.querySelector<HTMLInputElement>('#search-input')!;
+  const journal = document.querySelector<HTMLSelectElement>('#search-journal')!;
+  const year = document.querySelector<HTMLSelectElement>('#search-year')!;
+  const type = document.querySelector<HTMLSelectElement>('#search-type')!;
+  const status = document.querySelector<HTMLElement>('#search-status')!;
+  const list = document.querySelector<HTMLOListElement>('#search-results')!;
+  const more = document.querySelector<HTMLButtonElement>('#search-more')!;
+  function renderStatus() {
+    if(status.dataset.message){status.textContent=translate(status.dataset.message);return;}
+    const count=Number(status.dataset.count || 0);
+    const query=status.dataset.query || '';
+    status.textContent=currentLocale()==='zh-CN' ? `${query ? `“${query}”：` : ''}${count.toLocaleString('zh-CN')} 条结果` : `${count.toLocaleString('en')} ${count===1?'result':'results'}${query ? ` for “${query}”` : ''}`;
+  }
+  function statusMessage(message:string) {status.dataset.message=message;renderStatus();}
+  function resultLabel(element:HTMLElement) {element.textContent=[translate(element.dataset.resultType || ''),element.dataset.resultJournal || ''].filter(Boolean).join(' / ');}
+  document.addEventListener('open-utd:language',()=>{renderStatus();list.querySelectorAll<HTMLElement>('.result-type').forEach(resultLabel);});
+  status.dataset.message=strings.start;
+  renderStatus();
+  let modulePromise: Promise<Pagefind> | undefined;
+  let hits:SearchHit[] = [];
+  let shown = 0;
+  let version = 0;
+  async function pagefind(): Promise<Pagefind> {
+    if (!modulePromise) modulePromise = (async()=>{
+      const module = await import(/* @vite-ignore */ root.dataset.bundle!) as Pagefind;
+      await module.options({baseUrl:root.dataset.base!});
+      const filters = await module.filters();
+      for(const value of Object.keys(filters.year || {}).sort().reverse()) {const option = document.createElement('option');option.value=value;option.textContent=value;year.append(option);}
+      return module;
+    })().catch(error=>{modulePromise=undefined;throw error;});
+    return modulePromise;
+  }
+  async function appendResults(requestVersion:number) {
+    const next = hits.slice(shown, shown+15);
+    const results = await Promise.all(next.map(hit=>hit.data()));
+    if(requestVersion !== version) return;
+    for (const result of results) {
+      const target = new URL(result.url,location.origin);
+      if(target.origin !== location.origin || !target.pathname.startsWith(root.dataset.base!)) continue;
+      const item = document.createElement('li'); item.className='search-result';
+      const label = document.createElement('div'); label.className='result-type';label.dataset.resultType=(result.filters?.type || []).join(', ');label.dataset.resultJournal=(result.filters?.journal || []).join(', ');resultLabel(label);
+      const heading = document.createElement('h2');heading.dataset.original='';heading.lang='en'; const link = document.createElement('a');link.href=target.href;link.textContent=result.meta.title || result.url;heading.append(link);
+      const excerpt = document.createElement('p');excerpt.dataset.original='';excerpt.lang='en';
+      // Pagefind's plain_excerpt is HTML-entity encoded. Decode as inert text only.
+      const parsed = new DOMParser().parseFromString(result.plain_excerpt || '', 'text/html');
+      excerpt.textContent=parsed.body.textContent || '';
+      item.append(label,heading,excerpt); list.append(item);
+    }
+    shown += next.length; more.hidden = shown >= hits.length; more.disabled=false;
+  }
+  async function search() {
+    const currentVersion = ++version;
+    statusMessage(strings.loading); more.hidden=true; list.replaceChildren();
+    const query = input.value.trim();
+    const url = new URL(location.href);query?url.searchParams.set('q',query):url.searchParams.delete('q');history.replaceState(null,'',url);
+    try {
+      const api=await pagefind();
+      if(currentVersion!==version)return;
+      const filters:Record<string,string>={};if(journal.value)filters.journal=journal.value;if(year.value)filters.year=year.value;if(type.value)filters.type=type.value;
+      if(!query && !Object.keys(filters).length){statusMessage(strings.start);return;}
+      const result=await api.search(query || null,{filters});
+      if(currentVersion!==version)return;
+      hits=result.results;shown=0;if(hits.length){delete status.dataset.message;status.dataset.count=String(hits.length);status.dataset.query=query;renderStatus();}else statusMessage(strings.empty);
+      await appendResults(currentVersion);
+    } catch { if(currentVersion===version)statusMessage(strings.failed); }
+  }
+  document.querySelector('#search-form')!.addEventListener('submit',event=>{event.preventDefault();void search();});
+  [journal,year,type].forEach(select=>select.addEventListener('change',()=>{void search();}));
+  more.addEventListener('click',()=>{more.disabled=true;void appendResults(version).catch(()=>{more.disabled=false;statusMessage(strings.failed);});});
+  document.querySelector('#search-reset')!.addEventListener('click',()=>{journal.value='';year.value='';type.value='';void search();});
+  input.addEventListener('focus',()=>{void pagefind().catch(()=>{});},{once:true});
+  input.value=new URLSearchParams(location.search).get('q') || '';
+  if(input.value)void search();
+  else void pagefind().catch(()=>{statusMessage(strings.failed);});
+</script>

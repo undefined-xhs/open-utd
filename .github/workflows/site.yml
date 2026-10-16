@@ -1,0 +1,206 @@
+name: Sync metadata and deploy Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      sync_metadata:
+        description: Fetch and persist Crossref metadata before deployment
+        required: true
+        type: boolean
+        default: false
+      initial_import:
+        description: Historical import (requires sync_metadata)
+        required: true
+        type: boolean
+        default: false
+      from_year:
+        description: Initial import year (blank uses each journal's registry start_year)
+        required: false
+        type: string
+        default: '2006'
+      journal:
+        description: Journal slug to synchronize (blank selects all journals)
+        required: false
+        type: string
+        default: ''
+  schedule:
+    # Monday 02:23 UTC = Monday 10:23 Asia/Shanghai. GitHub may delay scheduled runs.
+    - cron: '23 2 * * 1'
+
+permissions: {}
+
+# Never interrupt a snapshot update or deploy an older run over a newer one.
+concurrency:
+  group: open-utd-production-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write # Only the validated sync snapshot step writes to main.
+      pages: write # configure-pages reads repository Pages configuration.
+    env:
+      AJR_ENV: production
+      AJR_DB_PATH: data/journals.sqlite
+      PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+      PUBLIC_BASE_PATH: ${{ vars.PUBLIC_BASE_PATH }}
+      PUBLIC_GISCUS_REPO: ${{ vars.PUBLIC_GISCUS_REPO }}
+      PUBLIC_GISCUS_REPO_ID: ${{ vars.PUBLIC_GISCUS_REPO_ID }}
+      PUBLIC_GISCUS_CATEGORY: ${{ vars.PUBLIC_GISCUS_CATEGORY }}
+      PUBLIC_GISCUS_CATEGORY_ID: ${{ vars.PUBLIC_GISCUS_CATEGORY_ID }}
+      INPUT_SYNC_METADATA: ${{ inputs.sync_metadata || false }}
+      INPUT_INITIAL_IMPORT: ${{ inputs.initial_import || false }}
+      INPUT_FROM_YEAR: ${{ inputs.from_year }}
+      INPUT_JOURNAL: ${{ inputs.journal }}
+      ASTRO_TELEMETRY_DISABLED: '1'
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -e '.[dev]'
+          npm ci
+
+      - name: Resolve site URL and base path
+        shell: bash
+        run: |
+          set -euo pipefail
+          owner="${GITHUB_REPOSITORY%%/*}"
+          repo="${GITHUB_REPOSITORY#*/}"
+          site="${PUBLIC_SITE_URL:-https://${owner}.github.io}"
+          base="${PUBLIC_BASE_PATH:-/${repo}}"
+          if [[ "${repo,,}" == "${owner,,}.github.io" && -z "$PUBLIC_BASE_PATH" ]]; then
+            base='/'
+          fi
+          echo "PUBLIC_SITE_URL=$site" >> "$GITHUB_ENV"
+          echo "PUBLIC_BASE_PATH=$base" >> "$GITHUB_ENV"
+
+      - name: Guard manual import options
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$INPUT_INITIAL_IMPORT" == true && "$INPUT_SYNC_METADATA" != true ]]; then
+            echo 'initial_import requires sync_metadata=true' >&2
+            exit 1
+          fi
+          if [[ "$INPUT_INITIAL_IMPORT" == true && -n "$INPUT_FROM_YEAR" ]] && ! [[ "$INPUT_FROM_YEAR" =~ ^[0-9]{4}$ ]]; then
+            echo 'from_year must be blank or a four-digit year' >&2
+            exit 1
+          fi
+          if [[ -n "$INPUT_JOURNAL" ]] && ! [[ "$INPUT_JOURNAL" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+            echo 'journal must be blank or one registered lowercase journal slug' >&2
+            exit 1
+          fi
+
+      - name: Synchronize metadata in a fixed Crossref index window
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.sync_metadata == true)
+        env:
+          # The contact credential is available only to the network sync step.
+          CROSSREF_MAILTO: ${{ secrets.CROSSREF_MAILTO }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${CROSSREF_MAILTO:-}" ]]; then
+            echo 'Missing Actions secret CROSSREF_MAILTO' >&2
+            exit 1
+          fi
+          python scripts/cli.py db-init
+          python scripts/cli.py seed --file data/journal_registry.csv
+          sync_args=(--provider crossref)
+          if [[ -n "$INPUT_JOURNAL" ]]; then
+            sync_args+=(--journal "$INPUT_JOURNAL")
+          fi
+          if [[ "$INPUT_INITIAL_IMPORT" == true ]]; then
+            sync_args+=(--mode initial)
+            if [[ -n "$INPUT_FROM_YEAR" ]]; then
+              sync_args+=(--from-year "$INPUT_FROM_YEAR")
+            fi
+          else
+            sync_args+=(--mode incremental)
+          fi
+          python scripts/cli.py sync "${sync_args[@]}"
+          python scripts/cli.py report --out data/sync-report.md
+
+      - name: Validate production data and test code
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "$AJR_DB_PATH" || { echo 'Run the manual initial import first: production snapshot missing.' >&2; exit 1; }
+          python scripts/cli.py validate --production
+          python -m pytest -q
+          npm run check
+
+      - name: Build HTML and Pagefind, verify links, record resource limits
+        shell: bash
+        run: |
+          set -euo pipefail
+          started=$SECONDS
+          npm run build
+          elapsed=$((SECONDS - started))
+          npm run test:site
+          python scripts/build_metrics.py --db "$AJR_DB_PATH" --dist dist --build-seconds "$elapsed"
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+
+      - name: Upload verified Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: dist
+
+      # GITHUB_TOKEN pushes do not trigger a second deployment workflow. This job
+      # must finish successfully before the dependent deploy job publishes its artifact.
+      - name: Commit validated metadata snapshot
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.sync_metadata == true)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -s data/journals.sqlite-wal
+          test ! -s data/journals.sqlite-journal
+          git add -- data/journals.sqlite data/sync-report.md
+          if git diff --cached --quiet; then
+            echo 'No metadata snapshot changes.'
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'data: update academic journal metadata'
+            # Never force-push: another main update or branch protection fails safely.
+            git push origin HEAD:main
+          fi
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy verified artifact from this run
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

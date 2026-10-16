@@ -1,0 +1,66 @@
+---
+import { copy } from '../lib/copy';
+import { href } from '../lib/urls';
+interface Props {entityType: 'journal' | 'article'; publicId:string;}
+const {entityType, publicId} = Astro.props;
+const isJournal = entityType === 'journal';
+const repo = import.meta.env.PUBLIC_GISCUS_REPO;
+const repoId = import.meta.env.PUBLIC_GISCUS_REPO_ID;
+const category = import.meta.env.PUBLIC_GISCUS_CATEGORY || 'Journal Reviews';
+const categoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID;
+const configured = !!(repo && repoId && categoryId);
+---
+<section class="content-section" id={isJournal ? 'reviews' : 'discussion'} data-pagefind-ignore>
+  <span class="eyebrow mb-3">{isJournal ? 'The publishing experience' : 'Research in conversation'}</span>
+  <h2>{isJournal ? copy.journal.reviews : 'Article discussion'}</h2>
+  <p class="comments-info">{isJournal ? copy.journal.reviewIntro : 'Discuss the methods, findings, and questions raised by this paper. Share thoughtful comments, Markdown, and replies through GitHub.'}</p>
+  <a class="text-link mt-3" href={href('guidelines/')}>{copy.journal.guidelines} →</a>
+  {configured ? <div class="giscus" data-giscus-host data-giscus-src="https://giscus.app/client.js" data-repo={repo} data-repo-id={repoId} data-category={category} data-category-id={categoryId} data-mapping="specific" data-term={`${entityType}:${publicId}`} data-strict="1" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-loading="lazy"></div> : <div class="comments-placeholder" data-discussion-term={`${entityType}:${publicId}`}><strong>{copy.journal.commentsOff}</strong><p>{isJournal ? copy.journal.commentsOffBody : 'An independent discussion for this article will appear once the maintainer connects GitHub Discussions.'}</p></div>}
+  <noscript><p class="comments-info">Enable JavaScript to use the GitHub discussion.</p></noscript>
+</section>
+<script>
+  const host = document.querySelector<HTMLElement>('[data-giscus-host]');
+  if (host) {
+    // giscus reads data-lang when its client executes and builds /<lang>/widget.
+    // Choose the saved locale before requesting the client, avoiding an English iframe flash.
+    const locale = () => document.documentElement.lang === 'zh-CN' ? 'zh-CN' : 'en';
+    const theme = () => document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    const client = document.createElement('script');
+    client.src = 'https://giscus.app/client.js';
+    client.async = true;
+    client.crossOrigin = 'anonymous';
+    for (const key of ['repo','repoId','category','categoryId','mapping','term','strict','reactionsEnabled','emitMetadata','inputPosition','loading']) {
+      const value = host.dataset[key];
+      if (value !== undefined) client.dataset[key] = value;
+    }
+    client.dataset.lang = locale();
+    client.dataset.theme = theme();
+    const bound = new WeakSet<HTMLIFrameElement>();
+    const syncFrame = () => {
+      client.dataset.lang = locale();
+      client.dataset.theme = theme();
+      const frame = host.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+      if (!frame) return;
+      frame.title = locale() === 'zh-CN' ? '评论' : 'Comments';
+      if (!bound.has(frame)) {
+        frame.addEventListener('load', () => {
+          frame.contentWindow?.postMessage({giscus:{setConfig:{theme:theme()}}}, 'https://giscus.app');
+        });
+        bound.add(frame);
+      }
+      const url = new URL(frame.src);
+      const path = `/${locale()}/widget`;
+      if (url.origin === 'https://giscus.app' && /^\/(?:[^/]+\/)?widget$/.test(url.pathname) && url.pathname !== path) {
+        // Locale routing is more reliable than setConfig.lang before giscus Router.isReady.
+        // Keep every query parameter intact: discussion identity, login session and backlink.
+        url.pathname = path;
+        url.searchParams.set('theme', theme());
+        frame.src = url.href;
+      }
+    };
+    const observer = new MutationObserver(syncFrame);
+    observer.observe(host, {childList:true, subtree:true, attributes:true, attributeFilter:['src']});
+    document.addEventListener('open-utd:language', syncFrame);
+    host.append(client);
+  }
+</script>

@@ -1,0 +1,18 @@
+{
+  "DOI": "10.5555/SYNTHETIC.001",
+  "ISSN": ["1234-5679"],
+  "type": "journal-article",
+  "title": ["Synthetic <i>decision</i> study"],
+  "author": [
+    {"given": "Alex", "family": "Example", "ORCID": "https://orcid.org/0000-0002-1825-0097", "affiliation": [{"name": "Synthetic University"}]},
+    {"given": "Morgan", "family": "Example"}
+  ],
+  "volume": "12",
+  "issue": "S1",
+  "published-print": {"date-parts": [[2024, 3]]},
+  "published-online": {"date-parts": [[2023, 12, 18]]},
+  "indexed": {"date-time": "2026-01-02T03:04:05Z"},
+  "abstract": "<jats:p>PRIVATE-ABSTRACT-SENTINEL: this unlicensed text must never enter public outputs.</jats:p>",
+  "URL": "https://doi.org/10.5555/SYNTHETIC.001",
+  "license": [{"URL": "https://creativecommons.org/licenses/by/4.0/"}]
+}

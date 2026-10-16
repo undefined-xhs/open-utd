@@ -1,0 +1,53 @@
+---
+import Header from '../components/Header.astro';
+import { copy } from '../lib/copy';
+import { href, repositoryUrl } from '../lib/urls';
+import { getManifest } from '../lib/catalog';
+import '../styles/global.css';
+interface Props { title: string; description?: string; noindex?: boolean; type?: string; originalTitle?: boolean; }
+const { title, description = copy.description, noindex = false, type = 'website', originalTitle = false } = Astro.props;
+const manifest = getManifest();
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-ui-title={title} data-original-title={originalTitle || undefined}>{title === copy.name ? `${copy.name} — ${copy.fullName}` : `${title} — ${copy.name}`}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#235b4e" />
+    {(noindex || manifest.environment === 'demo') && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href={href('favicon.svg')} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={copy.name} />
+    <meta name="twitter:card" content="summary" />
+    <script is:inline>
+      try { const savedLanguage = localStorage.getItem('open-utd-language'); document.documentElement.lang = savedLanguage === 'en' || savedLanguage === 'zh-CN' ? savedLanguage : navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en'; }
+      catch { document.documentElement.lang = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en'; }
+      try { const stored = localStorage.getItem('open-utd-theme'); document.documentElement.dataset.theme = stored === 'light' || stored === 'dark' ? stored : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+      catch { document.documentElement.dataset.theme = 'light'; }
+    </script>
+    <slot name="head" />
+  </head>
+  <body data-ui>
+    {manifest.environment === 'demo' && <div class="demo-banner" data-pagefind-ignore>{copy.common.demo}</div>}
+    <Header />
+    <main id="main"><slot /></main>
+    <footer class="site-footer" data-pagefind-ignore>
+      <div class="container">
+        <div class="footer-main">
+          <div><a class="brand-name" href={href()}>{copy.name}</a><p>{copy.footer.tagline}</p></div>
+          <nav class="footer-links" aria-label="Footer navigation">
+            <a href={href('data-sources/')}>{copy.footer.sources}</a><a href={href('guidelines/')}>{copy.footer.guidelines}</a><a href={href('privacy/')}>{copy.footer.privacy}</a><a href={`${repositoryUrl}/issues`} target="_blank" rel="noopener noreferrer">{copy.footer.issue} ↗</a>
+          </nav>
+        </div>
+        <div class="footer-bottom"><span>{copy.footer.disclaimer}</span><span>{copy.footer.source}</span></div>
+      </div>
+    </footer>
+  </body>
+</html>

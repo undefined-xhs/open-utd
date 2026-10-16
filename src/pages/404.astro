@@ -1,0 +1,7 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import {href} from '../lib/urls';
+---
+<BaseLayout title="Page not found" noindex>
+  <div class="container py-20"><span class="eyebrow">404 / Page not found</span><h1 class="mt-6">A little outside<br />the collection.</h1><p class="lead mt-7 mb-8">This page is not available. Browse the journals or search the catalog to find your way.</p><div class="article-actions"><a class="button" href={href('journals/')}>Browse journals →</a><a class="button secondary" href={href('search/')}>Search the catalog</a></div></div>
+</BaseLayout>

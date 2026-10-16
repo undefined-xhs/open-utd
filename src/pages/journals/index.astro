@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import JournalCard from '../../components/JournalCard.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import {getJournals} from '../../lib/catalog';
+import {copy} from '../../lib/copy';
+const journals = getJournals();
+const subjects = [...new Set(journals.map(j=>j.subject).filter(Boolean))] as string[];
+---
+<BaseLayout title="Journals">
+  <div class="container">
+    <Breadcrumbs items={[{label:copy.common.journals}]} />
+    <div class="page-intro"><span class="eyebrow">The journal collection</span><h1>{copy.journal.title}</h1><p class="lead">{copy.journal.intro}</p></div>
+    <div class="filter-bar"><input id="journal-query" type="search" placeholder={copy.journal.filter} aria-label={copy.journal.filter} /><select id="subject-filter" aria-label="Filter by academic field"><option value="">{copy.journal.all}</option>{subjects.map(subject=><option data-original value={subject}>{subject}</option>)}</select></div>
+    <div class="journal-grid" id="journal-list">{journals.map((journal,index)=><JournalCard journal={journal} index={index} />)}</div>
+    <p id="journal-empty" class="empty-state" hidden role="status">{copy.journal.noResults}</p>
+    <p class="muted text-xs mt-8 mb-12">{copy.common.coverage}</p>
+  </div>
+</BaseLayout>
+<script>
+  const query = document.querySelector<HTMLInputElement>('#journal-query')!;
+  const subject = document.querySelector<HTMLSelectElement>('#subject-filter')!;
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-journal-name]')];
+  function filter() {
+    let count = 0;
+    cards.forEach(card => { const show = card.dataset.journalName!.includes(query.value.trim().toLowerCase()) && (!subject.value || card.dataset.journalSubject === subject.value); card.hidden = !show; if(show) count++; });
+    document.querySelector<HTMLElement>('#journal-empty')!.hidden = count > 0;
+  }
+  query.addEventListener('input', filter); subject.addEventListener('change', filter);
+</script>

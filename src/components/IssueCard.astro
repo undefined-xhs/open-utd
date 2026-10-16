@@ -1,0 +1,13 @@
+---
+import type { Issue, JournalBrief } from '../lib/types';
+import { issueUrl } from '../lib/urls';
+import { issueTitle, number } from '../lib/formatting';
+interface Props { issue:Issue; journal:JournalBrief; }
+const {issue,journal} = Astro.props;
+---
+<a class="issue-card" href={issueUrl(journal,issue)} data-issue-year={issue.publication_year || ''}>
+  <span class="year">{issue.publication_year || 'Year not recorded'}</span>
+  <h3>{issueTitle(issue)}</h3>
+  {issue.issue_title && <p class="muted text-xs mt-2" data-original>{issue.issue_title}</p>}
+  <span class="issue-count">{number(issue.article_count)} articles <span aria-hidden="true">↗</span></span>
+</a>

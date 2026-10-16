@@ -1,0 +1,78 @@
+name: CI - validate and build
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      AJR_ENV: demo
+      AJR_DB_PATH: /tmp/ajr-ci-${{ github.run_id }}-${{ github.run_attempt }}.sqlite
+      PUBLIC_SITE_URL: https://example.invalid
+      PUBLIC_BASE_PATH: /open-utd
+      ASTRO_TELEMETRY_DISABLED: '1'
+    steps:
+      - name: Checkout untrusted PR without saved credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -e '.[dev]'
+          npm ci
+
+      # Dependencies need network access; all metadata tests/builds use local fixtures.
+      # Never expose Secrets, call a metadata API, or use pull_request_target here.
+      - name: Run offline data tests
+        run: python -m pytest -q
+
+      - name: Check production snapshot when present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -s data/journals.sqlite ]]; then
+            AJR_DB_PATH=data/journals.sqlite AJR_ENV=production \
+              python scripts/cli.py validate --production
+          fi
+
+      - name: Prepare isolated synthetic dataset
+        run: |
+          python scripts/cli.py db-init
+          python scripts/cli.py seed-demo
+          python scripts/cli.py validate
+
+      - name: Check Astro and build searchable site under a repository base path
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          started=$SECONDS
+          npm run build
+          elapsed=$((SECONDS - started))
+          npm run test:site
+          python scripts/build_metrics.py --db "$AJR_DB_PATH" --dist dist --build-seconds "$elapsed"
