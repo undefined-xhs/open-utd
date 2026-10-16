@@ -123,9 +123,22 @@ def test_empty_bootstrap_has_no_fake_sync_date_and_preserves_live_snapshot(tmp_p
 
 
 def test_catalogue_mapping_is_exact_and_read_only(connection):
+    connection.execute("INSERT INTO articles(public_id,journal_id,title,created_at,updated_at) VALUES ('a_one',1,'Original English paper title','2026-01-01T00:00:00Z','2026-01-01T00:00:00Z')")
+    connection.commit()
     path = connection.execute("PRAGMA database_list").fetchone()[2]
     from pathlib import Path
     before = Path(path).read_bytes()
     entities = feed.catalogue_entities(Path(path))
-    assert entities == {"journal:j_one": ENTITY}
+    article_entity = dict(ENTITY, entity_type="article", entity_id="a_one", title="Original English paper title", site_path="articles/a_one/")
+    assert entities == {"journal:j_one": ENTITY, "article:a_one": article_entity}
     assert Path(path).read_bytes() == before
+    discussions = [{"id": term, "title": term, "category": {"id": "category"}} for term in entities]
+    client = FakeClient([
+        (feed.DISCUSSIONS_QUERY, {"owner": "example", "name": "catalog", "category": "category", "cursor": None}, repository_page(discussions)),
+        (feed.COMMENTS_QUERY, {"id": "journal:j_one", "cursor": None}, {"node": {"comments": page([comment("journal-comment", 1, replies=page([]))])}}),
+        (feed.COMMENTS_QUERY, {"id": "article:a_one", "cursor": None}, {"node": {"comments": page([comment("article-comment", 2, replies=page([]))])}}),
+    ])
+    result = feed.fetch_feed(client, "example/catalog", "category", entities)
+    assert [item["entity_type"] for item in result["comments"]] == ["article", "journal"]
+    assert result["comments"][0]["title"] == "Original English paper title"
+    assert result["comments"][0]["site_path"] == "articles/a_one/"

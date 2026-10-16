@@ -172,8 +172,10 @@ def public_comment(node: dict, entity: dict, repository: str, is_reply: bool):
     if not isinstance(node.get("id"), str) or not isinstance(node.get("bodyText"), str):
         raise FeedError("Invalid comment content")
     url = urlsplit(node.get("url", ""))
-    prefix = f"/{repository}/discussions/"
-    if url.scheme != "https" or url.netloc != "github.com" or not url.path.lower().startswith(prefix.lower()) or not url.fragment:
+    path_pattern = rf"/{re.escape(repository)}/discussions/[0-9]+"
+    if (url.scheme != "https" or url.netloc != "github.com"
+            or not re.fullmatch(path_pattern, url.path, flags=re.IGNORECASE)
+            or not re.fullmatch(r"discussioncomment-[0-9]+", url.fragment)):
         raise FeedError("Comment is missing its original GitHub permalink")
     author = node.get("author")
     if author is not None:
