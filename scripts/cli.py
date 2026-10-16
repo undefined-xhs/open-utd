@@ -75,7 +75,7 @@ def sync_database(path: Path, args, *, client=None, progress=print) -> dict:
             run_id = conn.execute("INSERT INTO ingest_runs (provider,journal_id,started_at,status,from_date,to_date,indexed_until) VALUES ('crossref',?,?,'running',?,?,?)", (journal["id"], started, since, until, fixed_indexed_until)).lastrowid
             counts = {"fetched": 0, "inserted": 0, "updated": 0, "skipped": 0}
             seen = set()
-            issns = [r[0] for r in conn.execute("SELECT issn FROM journal_issns WHERE journal_id=? ORDER BY CASE medium WHEN 'print' THEN 0 ELSE 1 END,issn", (journal["id"],))]
+            issns = db.crossref_query_issns(conn, journal)
             progress(f"{journal['slug']}: {args.mode}, publication {since}..{until}, fixed index through {fixed_indexed_until}", flush=True)
             limited = False
             windows = [(since, indexed_from)]

@@ -65,6 +65,30 @@ def initialize(path: Path | str, env: str | None = None) -> None:
     conn.close()
 
 
+def normalize_crossref_issns(value: str | None, registered: set[str]) -> str | None:
+    """A null policy queries every registered ISSN; an explicit policy is a subset."""
+    if value is None or not value.strip():
+        return None
+    selected = {normalize_issn(part) for part in value.split(";")}
+    if not selected.issubset(registered):
+        raise ValueError("crossref_issns must belong to the same journal's registered ISSNs")
+    return ";".join(sorted(selected))
+
+
+def crossref_query_issns(conn: sqlite3.Connection, journal: sqlite3.Row) -> list[str]:
+    registered = [r[0] for r in conn.execute("SELECT issn FROM journal_issns WHERE journal_id=? ORDER BY CASE medium WHEN 'print' THEN 0 ELSE 1 END,issn", (journal["id"],))]
+    # Read-only validation/export can still inspect snapshots predating migration
+    # 002. Writable registry updates run db-init to add the explicit policy column.
+    policy = journal["crossref_issns"] if "crossref_issns" in journal.keys() else None
+    configured = normalize_crossref_issns(policy, set(registered))
+    if configured != policy:
+        raise ValueError("crossref_issns is not normalized")
+    if not registered:
+        raise ValueError(f"No registered ISSNs for {journal['slug']}")
+    selected = set(configured.split(";")) if configured else set(registered)
+    return [issn for issn in registered if issn in selected]
+
+
 def registry_rows(file: Path | str) -> list[dict]:
     with open(file, newline="", encoding="utf-8-sig") as handle:
         rows = list(csv.DictReader(handle))
@@ -99,6 +123,7 @@ def registry_rows(file: Path | str) -> list[dict]:
             raise ValueError("ISSN belongs to multiple registry journals")
         issns.update(mapped)
         row["_issns"] = mapped
+        row["crossref_issns"] = normalize_crossref_issns(row.get("crossref_issns"), set(mapped))
         if row.get("homepage_url") and not safe_url(row["homepage_url"]):
             raise ValueError("Unsafe journal homepage URL")
         row["start_year"] = int(row.get("start_year") or 2006)
@@ -123,14 +148,17 @@ def seed_registry(conn: sqlite3.Connection, file: Path | str) -> int:
             owner = conn.execute("SELECT journal_id FROM journal_issns WHERE issn=?", (issn,)).fetchone()
             if owner and (not old or owner[0] != old["id"]):
                 raise ValueError(f"ISSN {issn} is assigned to another journal")
-        fields = ("name", "abbreviation", "issn_l", "publisher", "subject", "homepage_url", "start_year")
+        fields = ("name", "abbreviation", "issn_l", "publisher", "subject", "homepage_url", "start_year", "crossref_issns")
         values = {key: row.get(key) or None for key in fields}
         if values["issn_l"]:
             values["issn_l"] = normalize_issn(values["issn_l"])
         values["is_visible"] = int(row.get("is_visible") or 1)
         if old:
             prior_issns = {r[0] for r in conn.execute("SELECT issn FROM journal_issns WHERE journal_id=?", (old["id"],))}
-            if old["start_year"] != values["start_year"] or set(row["_issns"]) - prior_issns:
+            prior_query_issns = set(crossref_query_issns(conn, old))
+            # Historic identifiers remain registered even if removed from the CSV.
+            next_query_issns = set(values["crossref_issns"].split(";")) if values["crossref_issns"] else prior_issns | set(row["_issns"])
+            if old["start_year"] != values["start_year"] or set(row["_issns"]) - prior_issns or prior_query_issns != next_query_issns:
                 conn.execute("UPDATE sync_state SET last_successful_indexed_at=NULL,last_status='scope_changed',last_error='Registry coverage changed; run a complete initial import' WHERE journal_id=?", (old["id"],))
             if any(old[k] != v for k,v in values.items()):
                 conn.execute("UPDATE journals SET "+",".join(f"{k}=?" for k in values)+",updated_at=? WHERE id=?", (*values.values(), stamp, old["id"]))
@@ -167,6 +195,8 @@ def validate(conn: sqlite3.Connection, *, production=False) -> dict:
     for row in conn.execute("SELECT issn FROM journal_issns"):
         if normalize_issn(row[0]) != row[0]:
             raise ValueError("ISSN is not normalized")
+    for journal in conn.execute("SELECT * FROM journals"):
+        crossref_query_issns(conn, journal)
     for row in conn.execute("SELECT doi,landing_url,abstract_display_status,abstract_rights_verified,abstract_license_url,abstract_text FROM articles"):
         if row[0] and normalize_doi(row[0]) != row[0]:
             raise ValueError("DOI is not normalized")

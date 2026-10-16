@@ -1,5 +1,25 @@
-public_id,slug,name,abbreviation,issn_l,issn_print,issn_electronic,publisher,subject,homepage_url,start_year,is_visible
-j_management_science,management-science,Management Science,MS,0025-1909,0025-1909,1526-5501,INFORMS,Management,https://pubsonline.informs.org/journal/mnsc,2006,1
-j_information_systems_research,information-systems-research,Information Systems Research,ISR,1047-7047,1047-7047,1526-5536,INFORMS,Information Systems,https://pubsonline.informs.org/journal/isre,2006,1
-j_marketing_science,marketing-science,Marketing Science,MktSci,0732-2399,0732-2399,1526-548X,INFORMS,Marketing,https://pubsonline.informs.org/journal/mksc,2006,1
-j_operations_research,operations-research,Operations Research,OR,0030-364X,0030-364X,1526-5463,INFORMS,Operations Research,https://pubsonline.informs.org/journal/opre,2006,1
+public_id,slug,name,abbreviation,issn_l,issn_print,issn_electronic,publisher,subject,homepage_url,start_year,is_visible,crossref_issns
+j_management_science,management-science,Management Science,MS,0025-1909,0025-1909,1526-5501,INFORMS,Management,https://pubsonline.informs.org/journal/mnsc,2006,1,
+j_information_systems_research,information-systems-research,Information Systems Research,ISR,1047-7047,1047-7047,1526-5536,INFORMS,Information Systems,https://pubsonline.informs.org/journal/isre,2006,1,
+j_marketing_science,marketing-science,Marketing Science,MktSci,0732-2399,0732-2399,1526-548X,INFORMS,Marketing,https://pubsonline.informs.org/journal/mksc,2006,1,
+j_operations_research,operations-research,Operations Research,OR,0030-364X,0030-364X,1526-5463,INFORMS,Operations Research,https://pubsonline.informs.org/journal/opre,2006,1,
+j_accounting_review,accounting-review,The Accounting Review,TAR,0001-4826,0001-4826,1558-7967,American Accounting Association,Accounting,https://publications.aaahq.org/accounting-review,2006,1,
+j_journal_of_accounting_and_economics,journal-of-accounting-and-economics,Journal of Accounting and Economics,JAE,0165-4101,0165-4101,1879-1980,Elsevier,Accounting,https://www.sciencedirect.com/journal/journal-of-accounting-and-economics,2006,1,0165-4101
+j_journal_of_accounting_research,journal-of-accounting-research,Journal of Accounting Research,JAR,0021-8456,0021-8456,1475-679X,Wiley,Accounting,https://onlinelibrary.wiley.com/journal/1475679x,2006,1,
+j_journal_of_finance,journal-of-finance,The Journal of Finance,JF,0022-1082,0022-1082,1540-6261,Wiley,Finance,https://onlinelibrary.wiley.com/journal/15406261,2006,1,
+j_journal_of_financial_economics,journal-of-financial-economics,Journal of Financial Economics,JFE,0304-405X,0304-405X,1879-2774,Elsevier,Finance,https://www.sciencedirect.com/journal/journal-of-financial-economics,2006,1,0304-405X
+j_review_of_financial_studies,review-of-financial-studies,The Review of Financial Studies,RFS,0893-9454,0893-9454,1465-7368,Oxford University Press,Finance,https://academic.oup.com/rfs,2006,1,
+j_informs_journal_on_computing,informs-journal-on-computing,INFORMS Journal on Computing,JOC,1091-9856,1091-9856,1526-5528,INFORMS,Information Systems,https://pubsonline.informs.org/journal/ijoc,2006,1,
+j_mis_quarterly,mis-quarterly,MIS Quarterly,MISQ,0276-7783,0276-7783,2162-9730,MIS Quarterly,Information Systems,https://misq.umn.edu,2006,1,
+j_journal_of_consumer_research,journal-of-consumer-research,Journal of Consumer Research,JCR,,0093-5301,1537-5277,Oxford University Press,Marketing,https://academic.oup.com/jcr,2006,1,
+j_journal_of_marketing,journal-of-marketing,Journal of Marketing,JM,,0022-2429,1547-7185,Sage,Marketing,https://journals.sagepub.com/home/jmx,2006,1,
+j_journal_of_marketing_research,journal-of-marketing-research,Journal of Marketing Research,JMR,,0022-2437,1547-7193,Sage,Marketing,https://journals.sagepub.com/home/mrj,2006,1,
+j_journal_of_operations_management,journal-of-operations-management,Journal of Operations Management,JOM,,0272-6963,1873-1317,Wiley,Operations Management,https://onlinelibrary.wiley.com/journal/18731317,2006,1,
+j_manufacturing_service_operations_management,manufacturing-service-operations-management,Manufacturing & Service Operations Management,MSOM,,1523-4614,1526-5498,INFORMS,Operations Management,https://pubsonline.informs.org/journal/msom,2006,1,
+j_production_and_operations_management,production-and-operations-management,Production and Operations Management,POM,,1059-1478,1937-5956,Sage,Operations Management,https://journals.sagepub.com/home/pao,2006,1,
+j_academy_of_management_journal,academy-of-management-journal,Academy of Management Journal,AMJ,0001-4273,0001-4273,1948-0989,Academy of Management,Management,https://www.aom.org/publications/journals/journal/,2006,1,
+j_academy_of_management_review,academy-of-management-review,Academy of Management Review,AMR,,0363-7425,1930-3807,Academy of Management,Management,https://www.aom.org/publications/journals/review/,2006,1,
+j_administrative_science_quarterly,administrative-science-quarterly,Administrative Science Quarterly,ASQ,0001-8392,0001-8392,1930-3815,Sage,Management,https://journals.sagepub.com/home/asq,2006,1,
+j_organization_science,organization-science,Organization Science,OrgSci,,1047-7039,1526-5455,INFORMS,Management,https://pubsonline.informs.org/journal/orsc,2006,1,
+j_journal_of_international_business_studies,journal-of-international-business-studies,Journal of International Business Studies,JIBS,,0047-2506,1478-6990,Springer Nature,International Business,https://link.springer.com/journal/41267,2006,1,
+j_strategic_management_journal,strategic-management-journal,Strategic Management Journal,SMJ,,0143-2095,1097-0266,Wiley,Strategy,https://sms.onlinelibrary.wiley.com/journal/10970266,2006,1,

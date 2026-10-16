@@ -10,9 +10,7 @@ export function getStaticPaths() { return getManifest().articles.map(a=>({params
 const article = getArticle(Astro.props.journalId, Astro.params.articleId!);
 const doi = doiUrl(article.doi);
 const landing = safeExternal(article.landing_url);
-const permitted = article.abstract_display_status === 'permitted' && article.abstract_text;
-const license = safeExternal(article.abstract_license_url);
-const structured = {'@context':'https://schema.org','@type':'ScholarlyArticle',headline:article.title,author:article.authors.map(a=>({'@type':'Person',name:a.byline_name || a.display_name,...(orcidUrl(a.orcid) ? {sameAs:orcidUrl(a.orcid)} : {})})),isPartOf:{'@type':'Periodical',name:article.journal.name},...(article.doi?{identifier:article.doi,sameAs:doi}:{}),...(article.publication_date?{datePublished:article.publication_date}:{}),...(permitted?{abstract:article.abstract_text}: {})};
+const structured = {'@context':'https://schema.org','@type':'ScholarlyArticle',headline:article.title,author:article.authors.map(a=>({'@type':'Person',name:a.byline_name || a.display_name,...(orcidUrl(a.orcid) ? {sameAs:orcidUrl(a.orcid)} : {})})),isPartOf:{'@type':'Periodical',name:article.journal.name},...(article.doi?{identifier:article.doi,sameAs:doi}:{}),...(article.publication_date?{datePublished:article.publication_date}:{})};
 const crumbs = [{label:copy.common.journals,url:href('journals/')},{label:article.journal.name,url:journalUrl(article.journal),original:true},...(article.issue ? [{label:issueTitle(article.issue),url:issueUrl(article.journal,article.issue)}] : []),{label:'Article'}];
 ---
 <BaseLayout originalTitle title={article.title} description={`${article.title}. ${article.authors.map(a=>a.byline_name).join(', ')}. ${article.journal.name}${article.publication_year ? `, ${article.publication_year}` : ''}.`} type="article">
@@ -29,7 +27,7 @@ const crumbs = [{label:copy.common.journals,url:href('journals/')},{label:articl
         <div class="article-actions" data-pagefind-ignore>{(doi || landing) && <a class="button" href={doi || landing} target="_blank" rel="noopener noreferrer">Read at original source ↗</a>}<a class="button secondary" href="#discussion">Discuss this article ↓</a></div>
       </header>
       <div class="article-layout">
-        <div><section class="content-section"><h2 data-pagefind-ignore>{copy.common.abstract}</h2>{permitted ? <><p class="abstract-text" data-original lang="en">{article.abstract_text}</p><p class="muted text-xs mt-5" data-pagefind-ignore>{copy.common.permitted} {license && <a class="text-link" href={license} target="_blank" rel="noopener noreferrer">{copy.common.licensed} ↗</a>}</p></> : <div class="notice mt-6" data-pagefind-ignore><strong class="block mb-2 font-medium">{copy.common.noAbstract}</strong><p>{copy.common.noAbstractBody}</p></div>}</section><GiscusComments entityType="article" publicId={article.public_id} /></div>
+        <div><GiscusComments entityType="article" publicId={article.public_id} /></div>
         <aside class="sidebar" data-pagefind-ignore><h2>Publication details</h2><dl class="metadata">{article.publication_date && <div><dt>{copy.common.published}</dt><dd><time datetime={article.publication_date}>{date(article.publication_date)}</time></dd></div>}{article.doi && <div><dt>{copy.common.doi}</dt><dd data-original>{doi ? <a href={doi} target="_blank" rel="noopener noreferrer">{article.doi} ↗</a> : article.doi}</dd></div>}{article.pages && <div><dt>{copy.common.pages}</dt><dd>{article.pages}</dd></div>}<div><dt>{copy.common.source}</dt><dd data-original={article.metadata_source ? true : undefined}>{article.metadata_source || 'Not recorded'}</dd></div><div><dt>{copy.common.updated}</dt><dd><time datetime={article.updated_at}>{date(article.updated_at)}</time></dd></div></dl><a class="text-link" href={href('data-sources/')}>About this metadata →</a></aside>
       </div>
     </article>

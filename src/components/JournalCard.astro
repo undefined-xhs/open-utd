@@ -6,7 +6,7 @@ const {journal} = Astro.props;
 ---
 <article class="journal-card review-card" data-journal-name={`${journal.name} ${journal.abbreviation || ''}`.toLowerCase()} data-journal-subject={journal.subject || ''}>
   <div class="journal-card-main">
-    <h3 data-original><a href={reviewsUrl(journal)}>{journal.name}</a></h3>
+    <h3 data-original><a href={journalUrl(journal)}>{journal.name}</a></h3>
     <p class="field" data-original>{journal.subject || journal.publisher}</p>
     <div class="card-actions"><a class="review-link" href={reviewsUrl(journal)}>Reviews & experiences <span aria-hidden="true">→</span></a><a href={journalUrl(journal)}>Browse archive <span aria-hidden="true">↗</span></a></div>
   </div>

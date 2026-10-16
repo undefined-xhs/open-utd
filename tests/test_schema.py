@@ -8,7 +8,7 @@ def test_migrations_are_idempotent_and_environment_is_sticky(tmp_path):
     db.initialize(path,"production")
     db.initialize(path,"production")
     with db.connect(path) as conn:
-        assert conn.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0]==1
+        assert conn.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0]==2
         assert conn.execute("PRAGMA foreign_keys").fetchone()[0]==1
         assert db.validate(conn)["articles"]==0
         with pytest.raises(ValueError,match="no real articles"):

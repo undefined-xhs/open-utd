@@ -5,6 +5,7 @@ import pytest
 
 from scripts import db
 from scripts.cli import parser, sync_database
+from scripts.export import export_catalog
 
 
 def args(*extra):
@@ -69,3 +70,41 @@ def test_partial_window_cannot_advance_watermark(connection,record):
 def test_incremental_needs_initial_import(connection,record):
     with pytest.raises(ValueError,match="No successful watermark"):
         sync_database(path_for(connection),args("--mode","incremental"),client=FakeClient(record),progress=lambda *a,**k:None)
+
+
+@pytest.mark.parametrize("print_issn,electronic_issn", [
+    ("0165-4101", "1879-1980"), ("0304-405X", "1879-2774"),
+])
+def test_explicit_query_subset_retains_full_ingest_and_display_issns(connection, record, tmp_path, print_issn, electronic_issn):
+    import json
+
+    registry = tmp_path / "registry.csv"
+    registry.write_text("public_id,slug,name,issn_print,issn_electronic,crossref_issns\n"
+                        f"j_one,test-journal,Test Journal,{print_issn},{electronic_issn},{print_issn}\n")
+    db.seed_registry(connection, registry)
+    connection.commit()
+    record["ISSN"] = [electronic_issn]  # Matching uses the full whitelist, not the query subset.
+    client = FakeClient(record)
+    path = path_for(connection)
+    result = sync_database(path, args(), client=client, progress=lambda *a, **k: None)
+    assert result["inserted"] == 1
+    assert [issn for issn, _ in client.calls] == [print_issn]
+    with db.connect(path) as current:
+        export_catalog(current, tmp_path / "export", production=True)
+    exported = json.loads((tmp_path / "export/journals-index.json").read_text())[0]
+    assert {print_issn, electronic_issn}.issubset(exported["issns"])
+
+
+def test_explicit_query_policy_does_not_swallow_request_failure(connection, record):
+    connection.execute("UPDATE journals SET crossref_issns='1234-5679'")
+    connection.commit()
+    path = path_for(connection)
+    before = path.read_bytes()
+
+    class UnavailableClient:
+        def works(self, *a, **k):
+            raise RuntimeError("Crossref HTTP 404")
+
+    with pytest.raises(RuntimeError, match="404"):
+        sync_database(path, args(), client=UnavailableClient(), progress=lambda *a, **k: None)
+    assert path.read_bytes() == before

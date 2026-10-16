@@ -8,7 +8,7 @@ An open journal catalogue with searchable article metadata and discussions for j
 
 页面提供 **English / 中文** 切换，涵盖导航、按钮、筛选、状态提示、政策说明和评论组件界面。语言偏好保存在当前浏览器的 `localStorage`（`open-utd-language`），刷新和跨页面导航后仍然有效；没有保存偏好时，中文浏览器使用中文，其他浏览器使用英文。禁用 JavaScript 时显示英文静态页面。
 
-**期刊名称、论文标题、作者署名以及获得展示许可的摘要始终保留来源英文原文，不作自动翻译。** 切换语言不会改变论文或期刊 URL、公开 ID、搜索数据或评论归属；giscus 界面对应切换为 `en` / `zh-CN`，已有评论内容保持原样。
+**期刊名称、论文标题和作者署名始终保留来源英文原文，不作自动翻译。本站不展示或索引论文摘要。** 切换语言不会改变论文或期刊 URL、公开 ID、搜索数据或评论归属；giscus 界面对应切换为 `en` / `zh-CN`，已有评论内容保持原样。
 
 ## 收录范围
 
@@ -18,14 +18,34 @@ An open journal catalogue with searchable article metadata and discussions for j
 | Information Systems Research | 1047-7047 | 1526-5536 | 2006 |
 | Marketing Science | 0732-2399 | 1526-548X | 2006 |
 | Operations Research | 0030-364X | 1526-5463 | 2006 |
+| The Accounting Review | 0001-4826 | 1558-7967 | 2006 |
+| Journal of Accounting and Economics | 0165-4101 | 1879-1980 | 2006 |
+| Journal of Accounting Research | 0021-8456 | 1475-679X | 2006 |
+| The Journal of Finance | 0022-1082 | 1540-6261 | 2006 |
+| Journal of Financial Economics | 0304-405X | 1879-2774 | 2006 |
+| The Review of Financial Studies | 0893-9454 | 1465-7368 | 2006 |
+| INFORMS Journal on Computing | 1091-9856 | 1526-5528 | 2006 |
+| MIS Quarterly | 0276-7783 | 2162-9730 | 2006 |
+| Journal of Consumer Research | 0093-5301 | 1537-5277 | 2006 |
+| Journal of Marketing | 0022-2429 | 1547-7185 | 2006 |
+| Journal of Marketing Research | 0022-2437 | 1547-7193 | 2006 |
+| Journal of Operations Management | 0272-6963 | 1873-1317 | 2006 |
+| Manufacturing & Service Operations Management | 1523-4614 | 1526-5498 | 2006 |
+| Production and Operations Management | 1059-1478 | 1937-5956 | 2006 |
+| Academy of Management Journal | 0001-4273 | 1948-0989 | 2006 |
+| Academy of Management Review | 0363-7425 | 1930-3807 | 2006 |
+| Administrative Science Quarterly | 0001-8392 | 1930-3815 | 2006 |
+| Organization Science | 1047-7039 | 1526-5455 | 2006 |
+| Journal of International Business Studies | 0047-2506 | 1478-6990 | 2006 |
+| Strategic Management Journal | 0143-2095 | 1097-0266 | 2006 |
 
 期刊清单在 [`data/journal_registry.csv`](data/journal_registry.csv)。首次导入覆盖 2006 年起至运行时 Crossref 已收录的数据，之后按索引更新时间增量同步。网站显示的是 **Crossref 已登记的元数据**；登记延迟、缺失卷期和 Online First 记录意味着它不能保证与出版社“最新一期完整目录”同步。具体覆盖和同步结果见数据来源页及同步报告，最新期目录以出版社官方期刊页为准。合成演示数据有明确标记，生产校验拒绝演示数据。
 
-2026 年 10 月 16 日首轮正式导入包含 4 本期刊、581 个期次、11,990 篇论文。后续数量以数据库及 [`data/sync-report.md`](data/sync-report.md) 为准。
+期刊范围采用 [UT Dallas 官方 24 刊名单](https://jsom.utdallas.edu/the-utd-top-100-business-school-research-rankings/index.php)。ISSN 与查询入口的核验依据见 [`data/journal-registry-sources.md`](data/journal-registry-sources.md)；当前期次、论文数量和各期刊采集结果以数据库及 [`data/sync-report.md`](data/sync-report.md) 为准。
 
 ## 浏览与讨论
 
-首页期刊卡片优先提供**评论与投稿经验**入口，另有浏览文献入口；期刊讨论集中在独立评论页。查找论文时，按“期刊 → 年份 → 期次 → 论文”逐层浏览；尚未分配期次的论文在单独的 Online First 列表中，每页 30 篇。
+首页点击期刊名称进入该刊的文献目录；卡片另有独立的**评论与投稿经验**按钮及浏览文献入口；期刊讨论集中在独立评论页。查找论文时，按“期刊 → 年份 → 期次 → 论文”逐层浏览；尚未分配期次的论文在单独的 Online First 列表中，每页 30 篇。
 
 | 路径（站点 base path 之后） | 内容 |
 | --- | --- |
@@ -89,7 +109,7 @@ npm run preview
 2. 在 **Settings → Actions → General** 允许所需 Actions。生产构建作业声明 `contents: write`，用于提交经过验证的 SQLite 快照；另需 `discussions: read` 读取公开评论。组织策略必须允许这些权限。
 3. 在 **Settings → Secrets and variables → Actions → Secrets** 添加 `CROSSREF_MAILTO`，填写真实维护者联系邮箱。联系地址只保存在 Secret 中；无需 Crossref API key。
 4. 默认 GitHub Pages 地址无需添加变量。自定义域名时同时设置 Actions Variables：`PUBLIC_SITE_URL=https://your-domain.example`、`PUBLIC_BASE_PATH=/`，并在 Pages 设置中配置域名和 DNS。
-5. 打开 **Actions → Sync metadata and deploy Pages → Run workflow**，选 `main`。新仓库首次导入设置 `sync_metadata=true`、`initial_import=true`、`from_year=2006`，`journal` 留空以包含全部期刊。当前仓库已有正式快照，重新部署可保持 `sync_metadata=false`。历史导入需等待全部分页、校验及静态构建完成。
+5. 打开 **Actions → Sync metadata and deploy Pages → Run workflow**，选 `main`。新仓库首次导入设置 `sync_metadata=true`、`initial_import=true`、`from_year=2006`，`journal` 留空以包含全部期刊。当前仓库已有正式快照，重新部署可保持 `sync_metadata=false`。历史导入需等待全部分页、校验及静态构建完成。同步成功后先保存一份保留 7 天的 Actions artifact（SQLite 与同步报告），后续构建或容量校验失败时仍可下载恢复，生产版本只在全部检查通过后更新。
 6. 查看运行 Summary 的资源指标、评论快照统计、提交后的 [`data/sync-report.md`](data/sync-report.md)、Pages 环境链接。后续普通代码推送、评论变动和每小时定时刷新评论，每周运行元数据增量同步。
 
 如果仓库暂时没有真实生产快照，普通 push 部署会明确失败；运行一次手动历史导入后即可部署。工作流不会用演示论文填充正式站点。
@@ -159,6 +179,8 @@ npm run build
 
 请将示例邮箱替换为真实地址再联网。日常更新使用 `sync --provider crossref --mode incremental`。`sync --help` 列出 `--journal`、`--from-date`、`--to-date`、`--dry-run` 和请求限制选项。正式持久化导入必须覆盖每本期刊 registry 中 `start_year` 的 1 月 1 日至当前 UTC 日期；不同范围只能使用 `--dry-run` 检查。`--limit` 也仅用于 dry run，避免截断分页或局部年份导入被误记为完整成功。如果要调整正式起始年份，请先审核并修改 registry，再执行完整历史导入。
 
+注册表中的 `crossref_issns` 是可选的 Crossref 查询入口集合，用分号分隔；留空时查询该刊全部已登记 ISSN。该字段只能包含该行的真实 ISSN，不改变完整的期刊 ISSN 展示或文章归属校验。仅在有明确来源证据时限制查询入口，例如 JAE、JFE 的真实电子 ISSN 尚无 Crossref journal endpoint；其他查询错误仍会中止同步。修改实际查询集合会使水位失效，必须重新执行完整历史导入。
+
 添加期刊时，先核实出版社和 Crossref ISSN，向 registry 增加一行，分配稳定 slug 并设置 `start_year`。提交注册表后，手动运行 `site.yml`，设置 `sync_metadata=true`、`initial_import=true`、`journal=new-journal-slug`，并将 `from_year` 改为该期刊的 `start_year`（或留空读取 registry）。这样只导入新增期刊，其他期刊的已有论文和公开 ID 保留。如果同一提交新增多本尚无数据的可见期刊，应将 `journal` 留空一并完成首次导入；不同期刊起始年份不一致时，`from_year` 也留空。
 
 也可以在本地只导入新增期刊：
@@ -180,7 +202,7 @@ npm run test:site
 - 标题、作者顺序、DOI、卷期和日期来自源数据；只有年份的日期保持年份精度，不伪装成具体某天。
 - 没有足够卷期信息的论文列入 Online First / Unassigned。缺失信息保留缺失状态，不推测补全。
 - 同一规范化 DOI 至多一篇论文，记录更新保留 `public_id`；同名作者不在缺少可靠身份 ID 时自动合并。
-- 摘要须经过明确的再发布许可判断。许可未知或受限制时，仅展示状态和 DOI 链接；摘要不进入公开 SQLite 快照、JSON、HTML 或搜索索引。Crossref 返回某字段本身不等于授权。
+- 网站不展示论文摘要、摘要展开区或缺失摘要提示，也不将摘要写入 HTML、JSON-LD 或搜索索引；论文详情直接连接讨论区。通过原始来源链接阅读摘要与全文。采集器不请求摘要字段，公开 SQLite 及导出仍保留严格的权利校验，拒绝保存未获授权的摘要。
 - OpenAlex enrichment 目前不作为生产数据源启用，`OPENALEX_API_KEY` 只是预留配置；工作流不会请求它或产生额外 API 用量。
 - MIT 许可覆盖本项目源码和原创文档，不授予第三方摘要、出版社内容或用户评论的权利。
 
