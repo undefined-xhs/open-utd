@@ -4,6 +4,7 @@ import SearchBox from '../components/SearchBox.astro';
 import JournalCard from '../components/JournalCard.astro';
 import {getJournals} from '../lib/catalog';
 import {copy} from '../lib/copy';
+import {href} from '../lib/urls';
 const journals = getJournals();
 ---
 <BaseLayout title={copy.name}>
@@ -11,6 +12,7 @@ const journals = getJournals();
     <section class="comments-intro">
       <h1>{copy.home.title}</h1>
       <p class="lead">{copy.home.lead}</p>
+      <a class="text-link latest-comments-link" href={href('comments/')}>{copy.comments.title} →</a>
       <div class="paper-search"><label class="search-label" for="home-paper-search">Find a paper to discuss</label><SearchBox inputId="home-paper-search" /></div>
     </section>
     <section class="journal-selection" aria-label="Journal reviews">

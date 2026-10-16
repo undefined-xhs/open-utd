@@ -24,5 +24,7 @@ build-metrics.json
 build-metrics.md
 .DS_Store
 npm-debug.log*
+public/data/comments.json
+public/data/.comments-*.json
 
 # data/journals.sqlite is deliberately tracked: it is the production snapshot.

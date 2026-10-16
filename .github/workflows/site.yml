@@ -3,6 +3,8 @@ name: Sync metadata and deploy Pages
 on:
   push:
     branches: [main]
+  discussion_comment:
+    types: [created, edited, deleted]
   workflow_dispatch:
     inputs:
       sync_metadata:
@@ -28,6 +30,8 @@ on:
   schedule:
     # Monday 02:23 UTC = Monday 10:23 Asia/Shanghai. GitHub may delay scheduled runs.
     - cron: '23 2 * * 1'
+    # Refresh public comments hourly; this schedule never calls Crossref.
+    - cron: '37 * * * *'
 
 permissions: {}
 
@@ -44,6 +48,7 @@ jobs:
     permissions:
       contents: write # Only the validated sync snapshot step writes to main.
       pages: write # configure-pages reads repository Pages configuration.
+      discussions: read # Server-side collection only; never exposed to the browser.
     env:
       AJR_ENV: production
       AJR_DB_PATH: data/journals.sqlite
@@ -114,7 +119,7 @@ jobs:
           fi
 
       - name: Synchronize metadata in a fixed Crossref index window
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.sync_metadata == true)
+        if: (github.event_name == 'schedule' && github.event.schedule == '23 2 * * 1') || (github.event_name == 'workflow_dispatch' && inputs.sync_metadata == true)
         env:
           # The contact credential is available only to the network sync step.
           CROSSREF_MAILTO: ${{ secrets.CROSSREF_MAILTO }}
@@ -151,6 +156,11 @@ jobs:
           python -m pytest -q
           npm run check
 
+      - name: Fetch complete public comment snapshot
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/fetch_comments.py
+
       - name: Build HTML and Pagefind, verify links, record resource limits
         shell: bash
         run: |
@@ -172,7 +182,7 @@ jobs:
       # GITHUB_TOKEN pushes do not trigger a second deployment workflow. This job
       # must finish successfully before the dependent deploy job publishes its artifact.
       - name: Commit validated metadata snapshot
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.sync_metadata == true)
+        if: (github.event_name == 'schedule' && github.event.schedule == '23 2 * * 1') || (github.event_name == 'workflow_dispatch' && inputs.sync_metadata == true)
         shell: bash
         run: |
           set -euo pipefail

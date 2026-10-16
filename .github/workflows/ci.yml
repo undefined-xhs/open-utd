@@ -65,6 +65,7 @@ jobs:
           python scripts/cli.py db-init
           python scripts/cli.py seed-demo
           python scripts/cli.py validate
+          python scripts/fetch_comments.py --empty
 
       - name: Check Astro and build searchable site under a repository base path
         shell: bash

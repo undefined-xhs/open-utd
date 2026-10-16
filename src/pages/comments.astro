@@ -1,0 +1,154 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import {copy} from '../lib/copy';
+import {href, repositoryUrl} from '../lib/urls';
+---
+<BaseLayout title={copy.comments.title} description={copy.comments.intro}>
+  <div class="container comments-page" data-pagefind-ignore>
+    <Breadcrumbs items={[{label:copy.comments.title}]} />
+    <div class="page-intro compact-intro">
+      <h1>{copy.comments.title}</h1>
+      <p class="lead">{copy.comments.intro}</p>
+      <p class="comments-sync-note">{copy.comments.schedule}</p>
+    </div>
+    <section id="comments-feed" data-feed={href('data/comments.json')} aria-busy="true" aria-label={copy.comments.list}>
+      <p id="comments-synced" class="comments-sync-note" data-ui-dynamic hidden></p>
+      <p id="comments-feed-status" class="comments-feed-status" role="status" aria-live="polite" data-ui-dynamic>{copy.comments.loading}</p>
+      <button id="comments-retry" class="button secondary" type="button" hidden>{copy.comments.retry}</button>
+      <ol id="comments-list" class="comments-list" data-ui-dynamic></ol>
+      <button id="comments-more" class="button secondary" type="button" hidden>{copy.comments.more}</button>
+      <noscript><p class="notice">{copy.comments.noScript} <a class="text-link" href={`${repositoryUrl}/discussions`} target="_blank" rel="noopener noreferrer">{copy.comments.github} ↗</a></p></noscript>
+    </section>
+  </div>
+</BaseLayout>
+<script>
+  import {copy} from '../lib/copy';
+  import {currentLocale, translate} from '../lib/i18n';
+  import {href} from '../lib/urls';
+
+  interface FeedComment {
+    id:string;
+    author:{login:string;url:string;avatar_url?:string}|null;
+    body_text:string;
+    created_at:string;
+    updated_at:string;
+    url:string;
+    entity_type:'journal'|'article';
+    entity_id:string;
+    title:string;
+    journal_name:string;
+    journal_slug:string;
+    site_path:string;
+    is_reply:boolean;
+  }
+  interface CommentFeed {schema_version:1;updated_at:string|null;repository:string;comments:FeedComment[];}
+  const root=document.querySelector<HTMLElement>('#comments-feed')!;
+  const status=document.querySelector<HTMLElement>('#comments-feed-status')!;
+  const synced=document.querySelector<HTMLElement>('#comments-synced')!;
+  const list=document.querySelector<HTMLOListElement>('#comments-list')!;
+  const retry=document.querySelector<HTMLButtonElement>('#comments-retry')!;
+  const more=document.querySelector<HTMLButtonElement>('#comments-more')!;
+  const pageSize=20;
+  let feed:CommentFeed|undefined;
+  let shown=0;
+  let state:'loading'|'ready'|'error'='loading';
+
+  function validDate(value:unknown):value is string {
+    return typeof value==='string' && !Number.isNaN(Date.parse(value));
+  }
+  function githubUrl(value:unknown):string|undefined {
+    if(typeof value!=='string')return;
+    try {
+      const url=new URL(value);
+      if(url.protocol==='https:' && url.hostname==='github.com' && !url.username && !url.password)return url.href;
+    } catch { /* Invalid URLs remain non-clickable. */ }
+  }
+  function parseFeed(value:unknown):CommentFeed {
+    if(!value || typeof value!=='object')throw new Error('Invalid comment snapshot');
+    const data=value as Record<string,unknown>;
+    if(data.schema_version!==1 || typeof data.repository!=='string' || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(data.repository) || !Array.isArray(data.comments) || !(data.updated_at===null || validDate(data.updated_at)))throw new Error('Invalid comment snapshot');
+    if(data.updated_at===null && data.comments.length)throw new Error('Unsynchronized snapshot contains comments');
+    const prefix=`/${data.repository}/discussions/`;
+    for(const raw of data.comments) {
+      if(!raw || typeof raw!=='object')throw new Error('Invalid comment');
+      const item=raw as Record<string,unknown>;
+      if(!['id','body_text','url','entity_id','title','journal_name','journal_slug','site_path'].every(key=>typeof item[key]==='string') || !validDate(item.created_at) || !validDate(item.updated_at) || !['journal','article'].includes(String(item.entity_type)) || typeof item.is_reply!=='boolean')throw new Error('Invalid comment');
+      const source=githubUrl(item.url);
+      if(!source || !new URL(source).pathname.toLowerCase().startsWith(prefix.toLowerCase()) || !/^\d+$/.test(new URL(source).pathname.slice(prefix.length)) || !/^#discussioncomment-\d+$/.test(new URL(source).hash))throw new Error('Invalid source permalink');
+      if(item.author!==null && (!item.author || typeof item.author!=='object' || typeof (item.author as Record<string,unknown>).login!=='string' || typeof (item.author as Record<string,unknown>).url!=='string'))throw new Error('Invalid author');
+    }
+    return data as unknown as CommentFeed;
+  }
+  function discussionUrl(comment:FeedComment):string|undefined {
+    const valid=comment.entity_type==='journal'
+      ? /^journals\/[a-z0-9][a-z0-9-]*\/reviews\/$/.test(comment.site_path)
+      : /^articles\/[A-Za-z0-9_-]+\/$/.test(comment.site_path);
+    if(valid)return `${href(comment.site_path)}#${comment.entity_type==='journal'?'reviews':'discussion'}`;
+  }
+  function dateTime(value:string):string {
+    return `${new Intl.DateTimeFormat(currentLocale(),{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'UTC'}).format(new Date(value))} UTC`;
+  }
+  function makeLink(label:string,url:string,external=false):HTMLAnchorElement {
+    const link=document.createElement('a');link.textContent=label;link.href=url;
+    if(external){link.target='_blank';link.rel='noopener noreferrer';}
+    return link;
+  }
+  function renderComment(comment:FeedComment):HTMLLIElement {
+    const item=document.createElement('li');item.className='comment-entry';
+    const context=document.createElement('div');context.className='comment-context';
+    const kind=document.createElement('span');kind.textContent=translate(comment.entity_type==='journal'?copy.comments.journal:copy.comments.article);context.append(kind);
+    if(comment.entity_type==='article' && comment.journal_name){const journal=document.createElement('span');journal.dataset.original='';journal.lang='en';journal.textContent=comment.journal_name;context.append(journal);}
+    const heading=document.createElement('h2');heading.dataset.original='';heading.lang='en';
+    const siteUrl=discussionUrl(comment);
+    heading.append(makeLink(comment.title,siteUrl || comment.url,!siteUrl));
+    const meta=document.createElement('div');meta.className='comment-meta';
+    const author=document.createElement('span');
+    if(comment.author){author.dataset.original='';const authorUrl=githubUrl(comment.author.url);author.append(authorUrl?makeLink(comment.author.login,authorUrl,true):document.createTextNode(comment.author.login));}
+    else author.textContent=translate(copy.comments.deleted);
+    const time=document.createElement('time');time.dateTime=comment.created_at;time.textContent=dateTime(comment.created_at);meta.append(author,time);
+    if(comment.is_reply){const reply=document.createElement('span');reply.className='comment-reply';reply.textContent=translate(copy.comments.reply);meta.append(reply);}
+    const snippet=document.createElement('p');snippet.className='comment-snippet';
+    if(comment.body_text.trim()){
+      // Comments are untrusted source text, never HTML or translated interface copy.
+      snippet.dataset.original='';
+      const text=Array.from(comment.body_text.replace(/\s+/g,' ').trim());
+      snippet.textContent=text.length>480?`${text.slice(0,480).join('')}…`:text.join('');
+    } else snippet.textContent=translate(copy.comments.noText);
+    const actions=document.createElement('div');actions.className='comment-links';
+    const source=makeLink(`${translate(copy.comments.source)} ↗`,comment.url,true);source.className='text-link';actions.append(source);
+    if(siteUrl){const join=makeLink(`${translate(copy.comments.join)} →`,siteUrl);join.className='text-link';actions.append(join);}
+    item.append(context,heading,meta,snippet,actions);return item;
+  }
+  function render() {
+    retry.hidden=state!=='error';
+    root.setAttribute('aria-busy',String(state==='loading'));
+    synced.hidden=!feed?.updated_at;
+    if(feed?.updated_at)synced.textContent=`${translate(copy.comments.synced)}: ${dateTime(feed.updated_at)}`;
+    if(state==='loading')status.textContent=translate(copy.comments.loading);
+    else if(state==='error')status.textContent=translate(copy.comments.failed);
+    else if(feed?.updated_at===null)status.textContent=translate(copy.comments.pending);
+    else if(!feed?.comments.length)status.textContent=translate(copy.comments.empty);
+    else {
+      const count=feed.comments.length;
+      status.textContent=currentLocale()==='zh-CN'?`已显示 ${shown.toLocaleString('zh-CN')} / ${count.toLocaleString('zh-CN')} 条评论`:`Showing ${shown.toLocaleString('en')} of ${count.toLocaleString('en')} ${count===1?'comment':'comments'}`;
+    }
+    list.replaceChildren(...(state==='ready' && feed ? feed.comments.slice(0,shown).map(renderComment) : []));
+    more.hidden=state!=='ready' || !feed || shown>=feed.comments.length;
+  }
+  async function load() {
+    state='loading';feed=undefined;shown=0;render();
+    const controller=new AbortController();
+    const timeout=window.setTimeout(()=>controller.abort(),15000);
+    try {
+      const response=await fetch(root.dataset.feed!,{cache:'no-cache',signal:controller.signal});
+      if(!response.ok)throw new Error(`Comment snapshot: ${response.status}`);
+      feed=parseFeed(await response.json());shown=Math.min(pageSize,feed.comments.length);state='ready';
+    } catch {state='error';}
+    finally {window.clearTimeout(timeout);render();}
+  }
+  more.addEventListener('click',()=>{shown=Math.min(shown+pageSize,feed?.comments.length || 0);render();});
+  retry.addEventListener('click',()=>{void load();});
+  document.addEventListener('open-utd:language',render);
+  void load();
+</script>

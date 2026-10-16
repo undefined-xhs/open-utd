@@ -8,8 +8,8 @@
   },
   "scripts": {
     "data:export": "python3 scripts/cli.py export --out .generated",
-    "dev": "npm run data:export && astro dev",
-    "build": "npm run data:export && astro build && pagefind --site dist",
+    "dev": "npm run data:export && python3 scripts/fetch_comments.py --ensure-empty && astro dev",
+    "build": "npm run data:export && python3 scripts/fetch_comments.py --ensure-empty && astro build && pagefind --site dist",
     "preview": "astro preview",
     "check": "astro check",
     "test:site": "node scripts/check_site.mjs"

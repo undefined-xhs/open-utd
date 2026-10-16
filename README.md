@@ -35,6 +35,7 @@ An open journal catalogue with searchable article metadata and discussions for j
 | `/journals/{slug}/issues/{issueId}/` | 该期论文列表，沿用原期次 URL |
 | `/journals/{slug}/online-first/{page}/` | Online First / Unassigned 分页列表，页码从 1 开始 |
 | `/articles/{articleId}/` | 论文元数据及该论文的独立讨论，沿用原论文 URL |
+| `/comments/` | 期刊和论文的最新评论与回复，按发表时间倒序，附原评论链接 |
 
 页面导航和评论组件支持中英文切换，文献元数据保持英文原文。网站检索仍可直接进入论文；年份和分页导航不改变已有论文、期次的公开 ID。
 
@@ -64,7 +65,7 @@ npm run test:site
 npm run preview
 ```
 
-预览地址以终端输出为准。`npm run build` 顺序执行数据库导出、Astro 静态构建、Pagefind 索引。搜索需要构建产物，使用 `preview` 验证；`npm run dev` 适合修改页面，修改数据库后需重新导出或重启。
+预览地址以终端输出为准。`npm run build` 顺序执行数据库导出、离线评论文件准备、Astro 静态构建、Pagefind 索引。首次本地构建会自动生成空评论文件，并明确显示“尚未同步”；已有评论快照不会被覆盖。需要恢复离线空状态时运行 `python scripts/fetch_comments.py --empty`。搜索需要构建产物，使用 `preview` 验证；`npm run dev` 适合修改页面，修改数据库后需重新导出或重启。
 
 [`.env.example`](.env.example) 提供可选配置；复制为 `.env` 后 Astro 会读取公开配置，Python CLI 读取 shell 环境变量，需自行 `export`。不要将 `.env` 提交到 Git。Windows 可使用 WSL 运行以上命令；npm 数据导出脚本调用 `python3`，应确保它指向已安装依赖的 Python。
 
@@ -75,20 +76,21 @@ npm run preview
 | 工作流 / 事件 | 行为 |
 | --- | --- |
 | `ci.yml`：向 main 提交 PR / 手动运行 | 只读令牌、独立临时演示 DB、离线数据测试、生产快照校验（若存在）、类型检查、子路径构建、静态产物检查 |
-| `site.yml`：push main | 只使用已提交的生产快照构建和部署，不请求元数据 API |
-| `site.yml`：每周一 02:23 UTC（北京时间 10:23） | Crossref 增量同步 → 校验 → 测试 → 构建 → 上传 → 提交快照 → 同一次运行部署 |
-| `site.yml`：手动运行 | 默认仅部署；显式启用同步后才采集，历史导入需再打开 `initial_import`，可用 `journal` 只更新指定期刊 |
+| `site.yml`：push main | 获取最新评论，使用已提交的生产数据库构建和部署，不请求 Crossref |
+| `site.yml`：评论新增、编辑、删除 / 每小时第 37 分钟 | 获取最新评论并重新部署；不请求 Crossref，不提交数据库 |
+| `site.yml`：每周一 02:23 UTC（北京时间 10:23） | Crossref 增量同步 → 校验 → 测试 → 评论快照 → 构建 → 上传 → 提交数据库 → 同一次运行部署 |
+| `site.yml`：手动运行 | 默认更新评论并部署；显式启用元数据同步后才采集 Crossref，历史导入需再打开 `initial_import`，可用 `journal` 只更新指定期刊 |
 
 ### 当前配置与首次部署
 
 公开仓库 `allenz-me/open-utd` 已创建，GitHub Pages 已选择 Actions 构建来源，`CROSSREF_MAILTO` 已保存为 Actions Secret；giscus App 已安装，Discussions 和四个公开评论变量已配置。重新部署此仓库无需重复这些设置。以下步骤也适用于 fork 或迁移到新仓库。
 
 1. 仓库使用公开可见性和 `main` 默认分支。在 **Settings → Pages → Build and deployment** 选择 **GitHub Actions**。
-2. 在 **Settings → Actions → General** 允许所需 Actions。生产构建作业声明 `contents: write`，用于提交经过验证的 SQLite 快照；组织策略必须允许这一权限。
+2. 在 **Settings → Actions → General** 允许所需 Actions。生产构建作业声明 `contents: write`，用于提交经过验证的 SQLite 快照；另需 `discussions: read` 读取公开评论。组织策略必须允许这些权限。
 3. 在 **Settings → Secrets and variables → Actions → Secrets** 添加 `CROSSREF_MAILTO`，填写真实维护者联系邮箱。联系地址只保存在 Secret 中；无需 Crossref API key。
 4. 默认 GitHub Pages 地址无需添加变量。自定义域名时同时设置 Actions Variables：`PUBLIC_SITE_URL=https://your-domain.example`、`PUBLIC_BASE_PATH=/`，并在 Pages 设置中配置域名和 DNS。
 5. 打开 **Actions → Sync metadata and deploy Pages → Run workflow**，选 `main`。新仓库首次导入设置 `sync_metadata=true`、`initial_import=true`、`from_year=2006`，`journal` 留空以包含全部期刊。当前仓库已有正式快照，重新部署可保持 `sync_metadata=false`。历史导入需等待全部分页、校验及静态构建完成。
-6. 查看运行 Summary 的资源指标、提交后的 [`data/sync-report.md`](data/sync-report.md)、Pages 环境链接。后续普通代码推送自动重建，每周运行增量同步。
+6. 查看运行 Summary 的资源指标、评论快照统计、提交后的 [`data/sync-report.md`](data/sync-report.md)、Pages 环境链接。后续普通代码推送、评论变动和每小时定时刷新评论，每周运行元数据增量同步。
 
 如果仓库暂时没有真实生产快照，普通 push 部署会明确失败；运行一次手动历史导入后即可部署。工作流不会用演示论文填充正式站点。
 
@@ -123,6 +125,18 @@ Actions 使用固定窗口的 Crossref `from-index-date` / `until-index-date` �
 评论编辑器主题位于 `public/giscus-light.css`、`public/giscus-dark.css` 和共用的 `public/giscus-editor.css`，随网站切换明暗模式。它们通过 giscus 官方自定义主题接口加载，地址由 `PUBLIC_SITE_URL` 与 `PUBLIC_BASE_PATH` 生成；本地预览也使用公开站点上的样式，因此主题修改需部署后才能在真实 iframe 中验证。
 
 管理员通过 GitHub Discussions 删除、锁定和管理违规内容；以网站 `/guidelines/`、`/privacy/` 为准。公共纠错可提交 [GitHub Issue](https://github.com/allenz-me/open-utd/issues)，敏感信息和申诉请联系维护者，避免在公开评论中发布私人资料。
+
+### 最新评论页
+
+`/comments/` 汇总所有已收录期刊、论文讨论中的公开评论与回复，按**发表时间**倒序排列，每次显示 20 条。每条记录提供 GitHub 原评论永久链接及返回本站讨论区的入口；评论和作者名称保持原文。页面展示快照更新时间，评论提交仍通过原讨论区进行。
+
+生产构建通过 [`scripts/fetch_comments.py`](scripts/fetch_comments.py) 只读访问 GitHub GraphQL API，读取当前 giscus 类别中标题精确匹配已知 `journal:<public_id>` / `article:<public_id>` 的讨论。脚本完整翻页获取评论和回复，老评论下的新回复也会出现；自动生成的 Discussion 开头正文不作为用户评论。已删除或被管理员折叠的评论正文不进入快照。每次重新采集会反映编辑、删除和管理操作，删除内容在网站上的消失时间取决于下次成功部署。
+
+评论事件触发刷新，另有每小时第 37 分钟的定时补查；GitHub 可能延迟事件或计划运行，因此这不是实时动态流。事件和每小时任务**只刷新评论并构建网站**，不会触发 Crossref 同步或数据库提交。GitHub 的 [`discussion_comment` 事件](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#discussion_comment)使用默认分支代码；当前官方文档仍将 Discussions webhook 标为公开预览。
+
+访问令牌仅在 Actions 采集步骤通过 `GITHUB_TOKEN` 使用，声明 `discussions: read`，不写入 JSON、HTML 或浏览器。`public/data/comments.json` 是忽略的构建文件，包含公开评论纯文本、作者、时间、原链接和本站目标；不提交评论副本到 Git 历史。当前工作流使用源码仓库自带令牌，迁移时优先保持评论与源码在同一仓库；独立评论仓库需另行配置具有该仓库只读权限的令牌或 GitHub App。
+
+API 错误、部分响应、分页异常或预算耗尽会阻止本次部署，保留已发布站点，不以空评论伪装成功。默认每轮最多 400 次请求，运行 Summary 显示请求数和 GraphQL 消耗；JSON 超过 5 MiB 预警、20 MiB 失败。达到预算时应拆分评论文件或引入增量存储，不能截断后声称完整。接口和权限依据 [GitHub Discussions GraphQL 文档](https://docs.github.com/en/graphql/guides/using-the-graphql-api-for-discussions)及[官方速率限制](https://docs.github.com/en/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api)。
 
 ## 数据维护与增加期刊
 

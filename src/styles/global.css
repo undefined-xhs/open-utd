@@ -245,3 +245,25 @@ html[lang='zh-CN'] .journal-selection h2,html[lang='zh-CN'] .review-page .conten
 @media(max-width:960px) { .year-grid {grid-template-columns:repeat(4,minmax(0,1fr))} .year-issues .issue-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
 @media(max-width:720px) { .comments-intro{padding-block:28px 26px}.comments-intro h1{font-size:2.65rem}.comments-intro .lead{font-size:13px;line-height:1.8}.paper-search{margin-top:21px}.journal-selection{padding-bottom:24px}.review-card{padding:19px 20px}.review-card h3{font-size:24px}.review-card .card-actions{margin-top:17px;gap:20px}.compact-intro{padding-block:24px 22px}.year-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.year-card{padding:12px}.year-card-title{font-size:21px}.year-card-count{font-size:9px}.year-section h2{font-size:26px}.online-link{align-items:flex-start;font-size:12px}.online-link>span:last-child{font-size:10px;white-space:nowrap}.review-page .content-section h2{font-size:19px}.pagination{gap:8px}.pagination .button{font-size:10px;padding:9px}.pagination-status{font-size:10px}.archive-note{line-height:1.9} }
 @media(max-width:380px) { .year-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.year-issues .issue-grid{grid-template-columns:1fr}.comments-intro h1{font-size:2.35rem}.review-card .card-actions{gap:16px} }
+/* Latest comments use the same compact reading layout as the catalog. */
+.latest-comments-link { margin-top:14px; font-size:13px; }
+.comments-page { max-width:1000px; min-height:65vh; padding-bottom:45px; }
+.comments-page .page-intro .lead { margin-top:16px; font-size:14px; }
+.comments-sync-note { margin-top:10px; font-size:11px; color:var(--muted); }
+.comments-feed-status { padding-block:17px; font-size:12px; color:var(--muted); }
+.comments-list { list-style:none; padding:0; margin:0 0 22px; }
+.comment-entry { padding-block:23px; border-top:1px solid var(--line); }
+.comment-context { display:flex; flex-wrap:wrap; gap:8px 15px; margin-bottom:8px; font-size:11px; color:var(--muted); }
+.comment-context > :first-child { color:var(--green); }
+.comment-entry h2 { font-size:24px; line-height:1.35; overflow-wrap:anywhere; }
+.comment-entry h2 a:hover { color:var(--green); }
+.comment-meta { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; margin-top:12px; font-size:11px; color:var(--muted); }
+.comment-meta a { color:var(--ink); }
+.comment-meta a:hover { text-decoration:underline; text-underline-offset:3px; }
+.comment-reply { color:var(--green); }
+.comment-snippet { margin-top:14px; font-size:14px; line-height:1.85; overflow-wrap:anywhere; }
+.comment-links { display:flex; flex-wrap:wrap; gap:12px 24px; margin-top:14px; }
+.comment-links .text-link { font-size:11px; }
+@media(min-width:721px) and (max-width:860px) { .header-inner{height:auto;min-height:88px;display:grid;grid-template-columns:1fr auto auto;gap:0 15px;padding-top:14px;padding-bottom:10px}.brand{grid-column:1;grid-row:1}.brand-sub{display:none}.header-nav{grid-column:1 / -1;grid-row:2;margin:7px 0 0;justify-content:flex-start;gap:26px;font-size:12px}.header-nav a{padding:4px 0}.language-switch{grid-column:2;grid-row:1;font-size:11px}.theme-toggle{grid-column:3;grid-row:1}.header-nav .github-nav{margin-left:auto} }
+@media(max-width:720px) { .header-nav{gap:8px 20px;flex-wrap:wrap}.header-nav .github-nav{display:none}.comments-page .page-intro h1{font-size:2.65rem}.comment-entry{padding-block:20px}.comment-entry h2{font-size:22px}.comment-meta{gap:7px 13px}.comment-snippet{font-size:14px} }
+@media(max-width:380px) { .header-nav{gap:7px 15px;font-size:11px} }

@@ -27,7 +27,7 @@ def check_site(dist: Path, generated: Path, base: str) -> list[str]:
     errors = []
     base = "/" + base.strip("/") + "/" if base.strip("/") else "/"
     manifest = json.loads((generated / "manifest.json").read_text())
-    expected = ["index.html", "404.html", "search/index.html", "journals/index.html", "pagefind/pagefind.js"]
+    expected = ["index.html", "404.html", "search/index.html", "journals/index.html", "comments/index.html", "data/comments.json", "pagefind/pagefind.js"]
     expected += [f"journals/{j['slug']}/index.html" for j in manifest["journals"]]
     expected += [f"journals/{j['slug']}/reviews/index.html" for j in manifest["journals"]]
     expected += [f"journals/{i['journal_slug']}/issues/{i['public_id']}/index.html" for i in manifest["issues"]]

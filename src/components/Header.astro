@@ -11,7 +11,7 @@ const current = Astro.url.pathname;
       <span class="brand-name">{copy.name}<span class="brand-sub">{copy.fullName}</span></span>
     </a>
     <nav class="header-nav" aria-label="Main navigation">
-      {(['journals','search','about'] as const).map(key => <a href={href(`${key}/`)} aria-current={current.includes(`/${key}/`) ? 'page' : undefined}>{copy.nav[key]}</a>)}
+      {(['journals','comments','search','about'] as const).map(key => <a href={href(`${key}/`)} aria-current={current.includes(`/${key}/`) ? 'page' : undefined}>{copy.nav[key]}</a>)}
       <a class="github-nav" href={repositoryUrl} target="_blank" rel="noopener noreferrer">{copy.nav.github} ↗</a>
     </nav>
     <div class="language-switch" role="group" aria-label="Interface language">
