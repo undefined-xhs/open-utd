@@ -254,7 +254,7 @@ def write_feed(output: Path, feed: dict, max_bytes: int = 20 * 1024 * 1024) -> i
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--repo", default=os.getenv("PUBLIC_GISCUS_REPO") or os.getenv("GITHUB_REPOSITORY") or "allenz-me/open-utd")
+    parser.add_argument("--repo", default=os.getenv("PUBLIC_GISCUS_REPO") or os.getenv("GITHUB_REPOSITORY") or "undefined-xhs/open-utd")
     parser.add_argument("--category-id", default=os.getenv("PUBLIC_GISCUS_CATEGORY_ID"))
     parser.add_argument("--db", type=Path, default=Path(os.getenv("AJR_DB_PATH") or "data/journals.sqlite"))
     parser.add_argument("--out", type=Path, default=Path("public/data/comments.json"))

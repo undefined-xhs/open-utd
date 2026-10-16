@@ -4,7 +4,7 @@
 
 An open journal catalogue with searchable article metadata and discussions for journals and individual articles. Built with Python + SQLite, Astro + TypeScript + Tailwind CSS, Pagefind, and GitHub Actions / Pages. The interface supports English and Chinese; journal and article metadata remain in their original English.
 
-Repository: [allenz-me/open-utd](https://github.com/allenz-me/open-utd) · Website: [www.open-utd-hot-take.xyz](https://www.open-utd-hot-take.xyz/).
+Repository: [undefined-xhs/open-utd](https://github.com/undefined-xhs/open-utd) · Website: [www.open-utd-hot-take.xyz](https://www.open-utd-hot-take.xyz/).
 
 ## Interface languages
 
@@ -68,7 +68,7 @@ Navigation and comment controls support both interface languages; bibliographic 
 Requirements: **Node.js 24**, **Python 3.12+**, and Git. Installing dependencies initially requires network access. The following demo, tests, and builds do not call Crossref or OpenAlex.
 
 ```bash
-git clone https://github.com/allenz-me/open-utd.git
+git clone https://github.com/undefined-xhs/open-utd.git
 cd open-utd
 python3 -m venv .venv
 source .venv/bin/activate
@@ -107,7 +107,7 @@ The repository has two workflows:
 
 ### Current configuration and first deployment
 
-The public `allenz-me/open-utd` repository is already configured to deploy Pages through Actions. `CROSSREF_MAILTO` is stored as an Actions Secret, the giscus App is installed, and Discussions plus the four public comment variables are configured. These steps do not need to be repeated when redeploying this repository. They also describe setup for a fork or a new repository.
+The public `undefined-xhs/open-utd` repository is already configured to deploy Pages through Actions. `CROSSREF_MAILTO` is stored as an Actions Secret, the giscus App is installed, and Discussions plus the four public comment variables are configured. These steps do not need to be repeated when redeploying this repository. They also describe setup for a fork or a new repository.
 
 The live site uses the custom domain above with HTTPS enforced; its Actions configuration is `PUBLIC_SITE_URL=https://www.open-utd-hot-take.xyz` and `PUBLIC_BASE_PATH=/`.
 
@@ -130,11 +130,11 @@ Synchronization and deployment share one concurrency group. Database commits mad
 
 Every journal and article has its own public discussion, with GitHub sign-in, Markdown, replies, and reactions. Journal reviews and submission experiences live at `/journals/{slug}/reviews/`; article discussions remain on article detail pages. Comments are stored in GitHub Discussions. The site does not provide star rankings or unverified review statistics.
 
-The current comment service uses the **Announcements** category in `allenz-me/open-utd`. These public configuration values identify the repository and category; they are not credentials:
+The current comment service uses the **Announcements** category in `undefined-xhs/open-utd`. These public configuration values identify the repository and category; they are not credentials:
 
 | Actions Variable | Current value |
 | --- | --- |
-| `PUBLIC_GISCUS_REPO` | `allenz-me/open-utd` |
+| `PUBLIC_GISCUS_REPO` | `undefined-xhs/open-utd` |
 | `PUBLIC_GISCUS_REPO_ID` | `R_kgDOVMBvww` |
 | `PUBLIC_GISCUS_CATEGORY` | `Announcements` |
 | `PUBLIC_GISCUS_CATEGORY_ID` | `DIC_kwDOVMBvw84DIl2E` |
@@ -152,7 +152,7 @@ The editor themes are `public/giscus-light.css`, `public/giscus-dark.css`, and t
 
 Comments or replies written by an AI Agent must include the exact label `written by AI Agent`. This applies to both journal and article discussions.
 
-Maintainers remove, lock, and moderate content through GitHub Discussions; see `/guidelines/` and `/privacy/` for site policies. Report public corrections through a [GitHub Issue](https://github.com/allenz-me/open-utd/issues). Contact the maintainer for sensitive information or appeals, and avoid posting private information in public comments.
+Maintainers remove, lock, and moderate content through GitHub Discussions; see `/guidelines/` and `/privacy/` for site policies. Report public corrections through a [GitHub Issue](https://github.com/undefined-xhs/open-utd/issues). Contact the maintainer for sensitive information or appeals, and avoid posting private information in public comments.
 
 ### Latest comments
 

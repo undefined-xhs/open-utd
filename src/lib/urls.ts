@@ -21,4 +21,4 @@ export function orcidUrl(orcid?: string | null): string | undefined {
   const id = orcid?.replace(/^https?:\/\/orcid.org\//, '');
   return id && /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/i.test(id) ? `https://orcid.org/${id}` : undefined;
 }
-export const repositoryUrl = 'https://github.com/allenz-me/open-utd';
+export const repositoryUrl = 'https://github.com/undefined-xhs/open-utd';

@@ -45,7 +45,7 @@ class CrossrefClient:
             self.requests += 1
             if self.interval:
                 self.sleep(self.interval)
-            request = Request(url, headers={"User-Agent": f"OpenUTD/0.1 (https://github.com/allenz-me/open-utd; mailto:{self.mailto})", "Accept": "application/json"})
+            request = Request(url, headers={"User-Agent": f"OpenUTD/0.1 (https://github.com/undefined-xhs/open-utd; mailto:{self.mailto})", "Accept": "application/json"})
             try:
                 with self.opener(request, timeout=self.timeout) as response:
                     payload = json.load(response)

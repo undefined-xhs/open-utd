@@ -4,7 +4,7 @@
 
 开放的学术期刊目录，支持文献元数据搜索、期刊投稿经验交流和逐篇文献讨论。项目基于 Python + SQLite、Astro + TypeScript + Tailwind CSS、Pagefind，以及 GitHub Actions / Pages。界面支持 English / 中文，期刊和文献元数据保留来源英文原文。
 
-项目仓库：[allenz-me/open-utd](https://github.com/allenz-me/open-utd) · 网站：[www.open-utd-hot-take.xyz](https://www.open-utd-hot-take.xyz/)。
+项目仓库：[undefined-xhs/open-utd](https://github.com/undefined-xhs/open-utd) · 网站：[www.open-utd-hot-take.xyz](https://www.open-utd-hot-take.xyz/)。
 
 ## 界面语言
 
@@ -68,7 +68,7 @@ Crossref 的 `journal-article` 分类也可能包含书评、勘误、索引及�
 需要 **Node.js 24**、**Python 3.12+**、Git。首次安装依赖需要网络；以下演示数据、测试和构建不会请求 Crossref/OpenAlex。
 
 ```bash
-git clone https://github.com/allenz-me/open-utd.git
+git clone https://github.com/undefined-xhs/open-utd.git
 cd open-utd
 python3 -m venv .venv
 source .venv/bin/activate
@@ -107,7 +107,7 @@ npm run preview
 
 ### 当前配置与首次部署
 
-公开仓库 `allenz-me/open-utd` 已创建，GitHub Pages 已选择 Actions 构建来源，`CROSSREF_MAILTO` 已保存为 Actions Secret；giscus App 已安装，Discussions 和四个公开评论变量已配置。重新部署此仓库无需重复这些设置。以下步骤也适用于 fork 或迁移到新仓库。
+公开仓库 `undefined-xhs/open-utd` 已创建，GitHub Pages 已选择 Actions 构建来源，`CROSSREF_MAILTO` 已保存为 Actions Secret；giscus App 已安装，Discussions 和四个公开评论变量已配置。重新部署此仓库无需重复这些设置。以下步骤也适用于 fork 或迁移到新仓库。
 
 当前网站使用上述自定义域名，并已强制启用 HTTPS；Actions 配置为 `PUBLIC_SITE_URL=https://www.open-utd-hot-take.xyz` 和 `PUBLIC_BASE_PATH=/`。
 
@@ -130,11 +130,11 @@ Actions 使用固定窗口的 Crossref `from-index-date` / `until-index-date` �
 
 每本期刊和每篇论文都有各自的公开讨论，支持 GitHub 登录、Markdown、回复和 Reaction。期刊讨论位于 `/journals/{slug}/reviews/`，用于投稿和审稿经历；论文讨论仍位于论文详情页，用于研究内容。评论保存在 GitHub Discussions。不做星级排名或未经验证的审稿统计。
 
-当前评论服务已配置在 `allenz-me/open-utd` 的 **Announcements** 类别。公开配置如下；这些值是仓库和类别标识，不是凭据：
+当前评论服务已配置在 `undefined-xhs/open-utd` 的 **Announcements** 类别。公开配置如下；这些值是仓库和类别标识，不是凭据：
 
 | Actions Variable | 当前值 |
 | --- | --- |
-| `PUBLIC_GISCUS_REPO` | `allenz-me/open-utd` |
+| `PUBLIC_GISCUS_REPO` | `undefined-xhs/open-utd` |
 | `PUBLIC_GISCUS_REPO_ID` | `R_kgDOVMBvww` |
 | `PUBLIC_GISCUS_CATEGORY` | `Announcements` |
 | `PUBLIC_GISCUS_CATEGORY_ID` | `DIC_kwDOVMBvw84DIl2E` |
@@ -152,7 +152,7 @@ Actions 使用固定窗口的 Crossref `from-index-date` / `until-index-date` �
 
 由 AI Agent 撰写的评论或回复必须包含原样标注 `written by AI Agent`，适用于期刊和论文讨论。
 
-管理员通过 GitHub Discussions 删除、锁定和管理违规内容；以网站 `/guidelines/`、`/privacy/` 为准。公共纠错可提交 [GitHub Issue](https://github.com/allenz-me/open-utd/issues)，敏感信息和申诉请联系维护者，避免在公开评论中发布私人资料。
+管理员通过 GitHub Discussions 删除、锁定和管理违规内容；以网站 `/guidelines/`、`/privacy/` 为准。公共纠错可提交 [GitHub Issue](https://github.com/undefined-xhs/open-utd/issues)，敏感信息和申诉请联系维护者，避免在公开评论中发布私人资料。
 
 ### 最新评论页
 
