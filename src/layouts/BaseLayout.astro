@@ -8,6 +8,11 @@ interface Props { title: string; description?: string; noindex?: boolean; type?:
 const { title, description = copy.description, noindex = false, type = 'website', originalTitle = false } = Astro.props;
 const manifest = getManifest();
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const analyticsToken = (import.meta.env.PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN || '').trim();
+const analyticsEnabled = import.meta.env.PROD && manifest.environment === 'production' && Boolean(analyticsToken);
+if (analyticsEnabled && !/^[a-f0-9]{32}$/i.test(analyticsToken)) {
+  throw new Error('PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN must be the 32-character hexadecimal site token from the Web Analytics beacon, not a Cloudflare API token.');
+}
 ---
 <!doctype html>
 <html lang="en">
@@ -49,5 +54,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         <div class="footer-bottom"><span>{copy.footer.disclaimer}</span><span>{copy.footer.source}</span></div>
       </div>
     </footer>
+    {analyticsEnabled && <script is:inline type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={JSON.stringify({token: analyticsToken})}></script>}
   </body>
 </html>

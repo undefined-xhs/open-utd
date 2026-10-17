@@ -67,6 +67,7 @@ jobs:
       PUBLIC_GISCUS_REPO_ID: ${{ vars.PUBLIC_GISCUS_REPO_ID }}
       PUBLIC_GISCUS_CATEGORY: ${{ vars.PUBLIC_GISCUS_CATEGORY }}
       PUBLIC_GISCUS_CATEGORY_ID: ${{ vars.PUBLIC_GISCUS_CATEGORY_ID }}
+      PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN: ${{ vars.PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN }}
       INPUT_SYNC_METADATA: ${{ inputs.sync_metadata || false }}
       INPUT_INITIAL_IMPORT: ${{ inputs.initial_import || false }}
       INPUT_FROM_YEAR: ${{ inputs.from_year }}

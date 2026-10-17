@@ -127,6 +127,16 @@ Crossref synchronization uses a fixed `from-index-date` / `until-index-date` win
 
 Synchronization and deployment share one concurrency group. Database commits made with `GITHUB_TOKEN` do not trigger another push workflow, so deployment finishes in the same run. If main changes while the build is running, the bot's non-fast-forward push fails. Update to the latest code and rerun; do not force-push.
 
+## Website analytics
+
+Cloudflare Web Analytics can report aggregate page views, visits, popular pages, referring sites, countries, devices, and page performance. Visits are not a count of unique people; browser blocking and network failures can cause missing data. It does not identify visitors by name or GitHub account, use tracking cookies, or provide custom click/search events. See the site's bilingual `/privacy/` page and [Cloudflare's documentation](https://developers.cloudflare.com/web-analytics/).
+
+1. In Cloudflare **Web Analytics → Add a site**, add the production hostname (currently `www.open-utd-hot-take.xyz`). Hosting stays on GitHub Pages; DNS changes are not required.
+2. Choose manual JavaScript snippet installation. Copy the 32-character hexadecimal `token` from `data-cf-beacon` into the repository's Actions **Variable** `PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN`. This is a public beacon site ID, not a Cloudflare API token or account credential. Do not also enable automatic script injection.
+3. Run `site.yml` with `comments_only=false` and `sync_metadata=false`. After successful deployment, visit the site and check **Web Analytics** in Cloudflare; reporting can take a few minutes.
+
+Only production builds using production data and a non-empty token include the script; demo data and `astro dev` do not. An invalid token blocks the production build without printing its value. Clear the Actions Variable and run a full deployment to disable collection. Analytics configuration is included in the comment-refresh cache key, so a changed token cannot reuse HTML built with older settings. Local configuration uses the same optional variable in [`.env.example`](.env.example).
+
 ## Journal and article comments: giscus + GitHub Discussions
 
 Every journal and article has its own public discussion, with GitHub sign-in, Markdown, replies, and reactions. Journal reviews and submission experiences live at `/journals/{slug}/reviews/`; article discussions remain on article detail pages. Comments are stored in GitHub Discussions. The site does not provide star rankings or unverified review statistics.

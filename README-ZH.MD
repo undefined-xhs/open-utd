@@ -127,6 +127,16 @@ Actions 使用固定窗口的 Crossref `from-index-date` / `until-index-date` �
 
 同步和部署通过同一 concurrency group 串行执行。`GITHUB_TOKEN` 的数据提交不会触发另一个 push 工作流，因此部署就在当前运行完成。若有人在构建期间更新 main，Bot 的非快进推送会失败；拉取新代码后重跑，不进行 force push。
 
+## 网站访问统计
+
+Cloudflare Web Analytics 可提供浏览量、访问次数、热门页面、来源网站、国家、设备和页面性能的汇总统计。访问次数不等于去重人数；浏览器拦截和网络故障可能导致漏计。它不会显示访客姓名或 GitHub 账户，不使用追踪 Cookie，也不提供自定义点击或搜索事件统计。详见网站双语 `/privacy/` 页面及 [Cloudflare 文档](https://developers.cloudflare.com/web-analytics/)。
+
+1. 在 Cloudflare 的 **Web Analytics → Add a site** 中添加正式域名（当前为 `www.open-utd-hot-take.xyz`）。网站继续由 GitHub Pages 托管，无需修改 DNS。
+2. 选择手动安装 JavaScript 脚本，将 `data-cf-beacon` 中的 32 位十六进制 `token` 填入仓库 Actions **Variable** `PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN`。这是公开的统计站点标识，不是 Cloudflare API token 或账户凭据。不要同时开启自动脚本注入。
+3. 运行 `site.yml`，保持 `comments_only=false`、`sync_metadata=false`。部署成功后访问网站，再到 Cloudflare 的 **Web Analytics** 查看数据；报告可能需要几分钟才出现。
+
+只有使用正式数据、配置了非空 token 的生产构建才会加入脚本；演示数据和 `astro dev` 不加载。无效 token 会阻断生产构建，错误信息不会输出其值。停用时清空该 Actions Variable 并重新执行完整部署。统计配置纳入评论刷新缓存键，修改 token 后不会复用旧配置生成的 HTML。本地可使用 [`.env.example`](.env.example) 中的同名可选变量。
+
 ## 期刊和论文评论：giscus + GitHub Discussions
 
 每本期刊和每篇论文都有各自的公开讨论，支持 GitHub 登录、Markdown、回复和 Reaction。期刊讨论位于 `/journals/{slug}/reviews/`，用于投稿和审稿经历；论文讨论仍位于论文详情页，用于研究内容。评论保存在 GitHub Discussions。不做星级排名或未经验证的审稿统计。
