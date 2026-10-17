@@ -1,0 +1,161 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import {copy} from '../lib/copy';
+import {href} from '../lib/urls';
+---
+<BaseLayout title={copy.analytics.title} description={copy.analytics.intro}>
+  <div class="container analytics-page" data-pagefind-ignore>
+    <Breadcrumbs items={[{label:copy.analytics.title}]} />
+    <div class="page-intro compact-intro">
+      <h1>{copy.analytics.title}</h1>
+      <p class="lead">{copy.analytics.intro}</p>
+      <p class="analytics-note">{copy.analytics.privacy}</p>
+    </div>
+    <section id="analytics" data-feed={href('data/analytics.json')} aria-busy="true" aria-label={copy.analytics.title}>
+      <div class="analytics-toolbar">
+        <div class="analytics-periods" role="group" aria-label={copy.analytics.period}>
+          <button type="button" data-period="7" aria-pressed="true">{copy.analytics.seven}</button>
+          <button type="button" data-period="30" aria-pressed="false">{copy.analytics.thirty}</button>
+        </div>
+        <p id="analytics-updated" class="analytics-note" data-ui-dynamic hidden></p>
+      </div>
+      <p id="analytics-status" class="analytics-status" role="status" aria-live="polite" data-ui-dynamic>{copy.analytics.loading}</p>
+      <button id="analytics-retry" class="button secondary" type="button" hidden>{copy.analytics.retry}</button>
+      <div id="analytics-results" data-ui-dynamic hidden>
+        <p id="analytics-range" class="analytics-note"></p>
+        <dl id="analytics-metrics" class="analytics-metrics"></dl>
+        <section class="analytics-section" aria-labelledby="analytics-daily-heading">
+          <h2 id="analytics-daily-heading"></h2>
+          <div id="analytics-chart" class="analytics-chart"></div>
+          <details class="analytics-details">
+            <summary id="analytics-details-label"></summary>
+            <table class="analytics-table"><thead id="analytics-daily-head"></thead><tbody id="analytics-daily"></tbody></table>
+          </details>
+        </section>
+        <div class="analytics-rankings">
+          <section class="analytics-section" aria-labelledby="analytics-countries-heading">
+            <h2 id="analytics-countries-heading"></h2>
+            <p id="analytics-countries-empty" class="analytics-note" hidden></p>
+            <table id="analytics-countries-table" class="analytics-table"><thead id="analytics-countries-head"></thead><tbody id="analytics-countries"></tbody></table>
+          </section>
+          <section class="analytics-section" aria-labelledby="analytics-pages-heading">
+            <h2 id="analytics-pages-heading"></h2>
+            <p id="analytics-pages-empty" class="analytics-note" hidden></p>
+            <table id="analytics-pages-table" class="analytics-table"><thead id="analytics-pages-head"></thead><tbody id="analytics-pages"></tbody></table>
+          </section>
+        </div>
+      </div>
+      <noscript><p class="notice">{copy.analytics.noScript}</p></noscript>
+    </section>
+    <aside class="analytics-method" aria-label={copy.analytics.source}>
+      <p>{copy.analytics.utc}</p><p>{copy.analytics.history}</p><p>{copy.analytics.limits}</p>
+      <p><a class="text-link" href="https://developers.cloudflare.com/web-analytics/" target="_blank" rel="noopener noreferrer">{copy.analytics.source} ↗</a> · <a class="text-link" href={href('privacy/')}>{copy.analytics.privacyLink}</a></p>
+    </aside>
+  </div>
+</BaseLayout>
+<script>
+  import {copy} from '../lib/copy';
+  import {currentLocale, translate} from '../lib/i18n';
+  import {href} from '../lib/urls';
+  import {parseAnalytics, type AnalyticsSnapshot, type AnalyticsDay} from '../lib/analytics';
+
+  const element=(id:string)=>document.getElementById(id)!;
+  const root=element('analytics');
+  const status=element('analytics-status');
+  const retry=element('analytics-retry');
+  let feed:AnalyticsSnapshot|undefined;
+  let selected:'7'|'30'='7';
+  let state:'loading'|'ready'|'error'='loading';
+  const number=(value:number)=>value.toLocaleString(currentLocale());
+  const dayLabel=(value:string)=>new Intl.DateTimeFormat(currentLocale(),{month:'short',day:'numeric',timeZone:'UTC'}).format(new Date(`${value}T00:00:00Z`));
+  const fullDay=(value:string)=>new Intl.DateTimeFormat(currentLocale(),{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'}).format(new Date(`${value}T00:00:00Z`));
+  function updateTime(value:string):string {
+    return new Intl.DateTimeFormat(currentLocale(),{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23',timeZoneName:'shortOffset'}).format(new Date(value));
+  }
+  function text(tag:string,value:string):HTMLElement {const node=document.createElement(tag);node.textContent=value;return node;}
+  function header(id:string,first:string):void {
+    const row=document.createElement('tr');
+    for(const label of [first,copy.analytics.views]){const cell=text('th',translate(label));cell.setAttribute('scope','col');row.append(cell);}
+    element(id).replaceChildren(row);
+  }
+  function row(label:string|HTMLAnchorElement,value:number):HTMLTableRowElement {
+    const result=document.createElement('tr');const title=document.createElement('th');title.scope='row';title.append(label);
+    result.append(title,text('td',number(value)));return result;
+  }
+  function metric(label:string,value:number):HTMLElement {
+    const item=document.createElement('div');const valueNode=text('dd',number(value));item.append(text('dt',translate(label)),valueNode);
+    if(label===copy.analytics.visits){const note=text('p',translate(copy.analytics.visitsNote));note.className='analytics-note';valueNode.append(note);}
+    return item;
+  }
+  function countryLabel(code:string):string {
+    if(code==='ZZ')return translate(copy.analytics.unknown);
+    try{return new Intl.DisplayNames([currentLocale()],{type:'region'}).of(code) || code;}catch{return code;}
+  }
+  function chart(days:AnalyticsDay[]):void {
+    const host=element('analytics-chart');const ns='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(ns,'svg');svg.setAttribute('viewBox','0 0 640 172');svg.setAttribute('role','img');
+    const title=document.createElementNS(ns,'title');title.textContent=translate(copy.analytics.daily);svg.append(title);
+    const max=Math.max(1,...days.map(day=>day.page_views));
+    const points=days.map((day,index)=>`${24+index*592/(days.length-1)},${144-day.page_views/max*118}`).join(' ');
+    const baseline=document.createElementNS(ns,'line');
+    for(const [key,value] of Object.entries({x1:'24',x2:'616',y1:'144',y2:'144',class:'analytics-baseline'}))baseline.setAttribute(key,value);
+    const line=document.createElementNS(ns,'polyline');line.setAttribute('points',points);line.setAttribute('class','analytics-line');svg.append(baseline,line);
+    const peak=document.createElementNS(ns,'text');peak.setAttribute('x','24');peak.setAttribute('y','16');peak.textContent=number(Math.max(...days.map(day=>day.page_views)));svg.append(peak);
+    for(const [index,anchor] of [[0,'start'],[days.length-1,'end']] as const) {
+      const label=document.createElementNS(ns,'text');label.setAttribute('x',index===0?'24':'616');label.setAttribute('y','168');label.setAttribute('text-anchor',anchor);label.textContent=dayLabel(days[index].date);svg.append(label);
+    }
+    host.replaceChildren(svg);
+  }
+  function render():void {
+    root.setAttribute('aria-busy',String(state==='loading'));retry.hidden=state!=='error';
+    document.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.period===selected)));
+    const period=state==='ready' && feed?.status==='ready'?feed.periods[selected]:undefined;
+    element('analytics-results').hidden=!period;
+    const updated=element('analytics-updated');updated.hidden=!feed?.updated_at;
+    if(feed?.updated_at)updated.textContent=`${translate(copy.analytics.synced)}: ${updateTime(feed.updated_at)}`;
+    if(state==='loading')status.textContent=translate(copy.analytics.loading);
+    else if(state==='error')status.textContent=translate(copy.analytics.failed);
+    else if(!period)status.textContent=translate(copy.analytics.pending);
+    else {
+      const notes=[];
+      if(Date.now()-Date.parse(feed!.updated_at!)>48*60*60*1000)notes.push(translate(copy.analytics.stale));
+      if(period.page_views===0)notes.push(translate(copy.analytics.empty));
+      status.textContent=notes.join(' ');
+    }
+    status.hidden=!status.textContent;
+    if(!period)return;
+    element('analytics-range').textContent=`${translate(copy.analytics.range)}: ${fullDay(period.start_date)} – ${fullDay(period.end_date)} (UTC)`;
+    element('analytics-metrics').replaceChildren(metric(copy.analytics.views,period.page_views),...(period.visits===null?[]:[metric(copy.analytics.visits,period.visits)]));
+    element('analytics-daily-heading').textContent=translate(copy.analytics.daily);
+    element('analytics-details-label').textContent=translate(copy.analytics.details);
+    header('analytics-daily-head',copy.analytics.date);
+    element('analytics-daily').replaceChildren(...period.daily.map(day=>row(fullDay(day.date),day.page_views)));
+    chart(period.daily);
+    element('analytics-countries-heading').textContent=translate(copy.analytics.countries);
+    element('analytics-pages-heading').textContent=translate(copy.analytics.pages);
+    header('analytics-countries-head',copy.analytics.country);header('analytics-pages-head',copy.analytics.page);
+    element('analytics-countries').replaceChildren(...period.countries.map(country=>row(countryLabel(country.country_code),country.page_views)));
+    element('analytics-pages').replaceChildren(...period.pages.map(page=>{
+      const link=document.createElement('a');link.href=href(page.path);link.className='text-link';link.textContent=page.path==='/'?translate(copy.analytics.home):page.path;
+      if(page.path!=='/')link.dataset.original='';return row(link,page.page_views);
+    }));
+    for(const [kind,entries,empty] of [['countries',period.countries,copy.analytics.noCountries],['pages',period.pages,copy.analytics.noPages]] as const) {
+      element(`analytics-${kind}-table`).hidden=!entries.length;const notice=element(`analytics-${kind}-empty`);notice.hidden=Boolean(entries.length);notice.textContent=translate(empty);
+    }
+  }
+  async function load():Promise<void> {
+    state='loading';feed=undefined;render();
+    const controller=new AbortController();const timeout=window.setTimeout(()=>controller.abort(),15000);
+    try {
+      const response=await fetch(root.dataset.feed!,{cache:'no-cache',signal:controller.signal});
+      if(!response.ok)throw new Error(`Analytics snapshot: ${response.status}`);
+      feed=parseAnalytics(await response.json());state='ready';
+    } catch {state='error';}
+    finally {window.clearTimeout(timeout);render();}
+  }
+  document.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(button=>button.addEventListener('click',()=>{selected=button.dataset.period==='30'?'30':'7';render();}));
+  retry.addEventListener('click',()=>{void load();});
+  document.addEventListener('open-utd:language',render);
+  void load();
+</script>

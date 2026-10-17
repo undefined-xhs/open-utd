@@ -100,11 +100,11 @@ The repository has two workflows:
 | Workflow / trigger | Behaviour |
 | --- | --- |
 | `ci.yml`: pull request targeting main / manual run | Read-only token, isolated temporary demo database, offline data tests, production snapshot validation when present, type checks, a subpath build, and static output checks |
-| `site.yml`: push to main | Fetch comments, build from the committed production database, and deploy without calling Crossref |
-| `site.yml`: comment created, edited, or deleted; discussion edited, deleted, transferred, or category changed | Compare the complete comment feed with the published JSON; stop if unchanged, otherwise reuse cached HTML and Pagefind and replace only the comment file |
-| `site.yml`: daily at 03:37 UTC, 11:37 in Asia/Shanghai | The same lightweight comment check, covering missed events and moderation changes; no Crossref requests or database commits |
+| `site.yml`: push to main | Fetch comments and aggregate analytics, build from the committed production database, and deploy without calling Crossref |
+| `site.yml`: comment created, edited, or deleted; discussion edited, deleted, transferred, or category changed | Compare complete comment and analytics snapshots with the published JSON; stop if both are unchanged, otherwise reuse cached HTML and Pagefind and replace both snapshots |
+| `site.yml`: daily at 03:37 UTC, 11:37 in Asia/Shanghai | Refresh aggregate analytics and check comments, covering missed events and moderation changes; no Crossref requests or database commits |
 | `site.yml`: Mondays at 02:23 UTC, 10:23 in Asia/Shanghai | Incremental Crossref synchronization → validation → tests → comment snapshot → build → database commit → upload → deployment in the same run |
-| `site.yml`: manual run | Refresh comments and deploy by default; Crossref runs only when metadata synchronization is enabled. Historical imports also require `initial_import`; `journal` can select one journal. Enable `comments_only` for the lightweight comment path |
+| `site.yml`: manual run | Refresh comments and analytics, then deploy by default; Crossref runs only when metadata synchronization is enabled. Historical imports also require `initial_import`; `journal` can select one journal. Enable `comments_only` for the lightweight comment and analytics path |
 
 ### Current configuration and first deployment
 
@@ -136,6 +136,14 @@ Cloudflare Web Analytics can report aggregate page views, visits, popular pages,
 3. Run `site.yml` with `comments_only=false` and `sync_metadata=false`. After successful deployment, visit the site and check **Web Analytics** in Cloudflare; reporting can take a few minutes.
 
 Only production builds using production data and a non-empty token include the script; demo data and `astro dev` do not. An invalid token blocks the production build without printing its value. Clear the Actions Variable and run a full deployment to disable collection. Analytics configuration is included in the comment-refresh cache key, so a changed token cannot reuse HTML built with older settings. Local configuration uses the same optional variable in [`.env.example`](.env.example).
+
+### Public statistics page
+
+`/analytics/` shows aggregate page views over the last 7 and 30 complete UTC days, daily trends, country/region totals, and popular site paths. The footer links to this page. The snapshot's collection time uses the visitor's browser time zone; reporting dates use UTC. Collection starts when the beacon is enabled and does not recover earlier traffic. An unavailable snapshot is shown as pending, separately from a successful zero count. The counts may be sampled and omit blocked requests; they do not count unique people.
+
+For automatic publication, create an API token with **Account Analytics:Read** for the relevant Cloudflare account and save it as the repository Actions **Secret** `CLOUDFLARE_ANALYTICS_API_TOKEN`. Set Actions **Variables** `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_WEB_ANALYTICS_SITE_TAG` to that account ID and the Web Analytics site tag from its dashboard URL. The site tag is distinct from the public beacon token. The API credential stays in the collection step and never enters the static site.
+
+[`scripts/fetch_analytics.py`](scripts/fetch_analytics.py) reads Cloudflare's RUM GraphQL dataset, limits results to this site's hostname and tag, and writes a validated aggregate `public/data/analytics.json`. Regular deployments and the existing daily snapshot check refresh it; `comments_only=true` can also refresh it manually. Changed analytics can trigger publication even when comments are unchanged. The lightweight path replaces both JSON snapshots while reusing HTML and Pagefind. API or validation failures stop publication and preserve the live snapshot. Local builds use `--ensure-empty` without network calls. Clearing all three server-side settings publishes an unavailable snapshot on the next run; removing only part of the configuration fails explicitly.
 
 ## Journal and article comments: giscus + GitHub Discussions
 

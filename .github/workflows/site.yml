@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       comments_only:
-        description: Refresh comments only (skip unchanged; reuse the built site)
+        description: Refresh comments and analytics (skip unchanged; reuse the built site)
         required: true
         type: boolean
         default: false
@@ -68,6 +68,8 @@ jobs:
       PUBLIC_GISCUS_CATEGORY: ${{ vars.PUBLIC_GISCUS_CATEGORY }}
       PUBLIC_GISCUS_CATEGORY_ID: ${{ vars.PUBLIC_GISCUS_CATEGORY_ID }}
       PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN: ${{ vars.PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_WEB_ANALYTICS_SITE_TAG: ${{ vars.CLOUDFLARE_WEB_ANALYTICS_SITE_TAG }}
       INPUT_SYNC_METADATA: ${{ inputs.sync_metadata || false }}
       INPUT_INITIAL_IMPORT: ${{ inputs.initial_import || false }}
       INPUT_FROM_YEAR: ${{ inputs.from_year }}
@@ -123,6 +125,16 @@ jobs:
             exit 1
           fi
 
+      - name: Fetch aggregate website analytics
+        env:
+          CLOUDFLARE_ANALYTICS_API_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_API_TOKEN }}
+        run: python scripts/fetch_analytics.py
+
+      - name: Compare with the published analytics snapshot
+        id: analytics
+        if: env.COMMENTS_ONLY == 'true'
+        run: python -m scripts.analytics_refresh compare
+
       - name: Collect comments without installing build dependencies
         if: env.COMMENTS_ONLY == 'true'
         env:
@@ -136,24 +148,24 @@ jobs:
 
       - name: Identify the exact source and configuration cache
         id: restore_key
-        if: env.COMMENTS_ONLY == 'true' && (steps.changes.outputs.changed == 'true' || env.COMMENT_EVENT != 'true')
+        if: env.COMMENTS_ONLY == 'true' && ((steps.changes.outputs.changed == 'true' || steps.analytics.outputs.changed == 'true') || env.COMMENT_EVENT != 'true')
         run: python -m scripts.comment_refresh cache-key >> "$GITHUB_OUTPUT"
 
       - name: Restore verified HTML and search index
         id: site_cache
-        if: env.COMMENTS_ONLY == 'true' && (steps.changes.outputs.changed == 'true' || env.COMMENT_EVENT != 'true')
+        if: env.COMMENTS_ONLY == 'true' && ((steps.changes.outputs.changed == 'true' || steps.analytics.outputs.changed == 'true') || env.COMMENT_EVENT != 'true')
         continue-on-error: true # Cache service failures also take the full-build fallback.
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: .artifacts/site-shell.tar
           key: ${{ steps.restore_key.outputs.key }}
           # Daily/manual no-change checks inspect availability without downloading.
-          lookup-only: ${{ steps.changes.outputs.changed != 'true' }}
+          lookup-only: ${{ steps.changes.outputs.changed != 'true' && steps.analytics.outputs.changed != 'true' }}
 
       - name: Decide whether to publish or rebuild
         id: plan
         env:
-          COMMENTS_CHANGED: ${{ steps.changes.outputs.changed }}
+          COMMENTS_CHANGED: ${{ steps.changes.outputs.changed == 'true' || steps.analytics.outputs.changed == 'true' }}
           CACHE_HIT: ${{ steps.site_cache.outputs.cache-hit }}
         shell: bash
         run: |
@@ -269,7 +281,11 @@ jobs:
           mkdir -p dist
           tar -xf .artifacts/site-shell.tar -C dist
           python -m scripts.comment_refresh patch
-          echo 'Reused verified HTML and Pagefind. Updated only data/comments.json; no npm install, Astro build, indexing or full-site link scan.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Reused verified HTML and Pagefind. Refresh comment and analytics snapshots without npm install, Astro build, indexing or full-site link scan.' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update analytics in the reused site artifact
+        if: steps.plan.outputs.publish == 'true' && steps.plan.outputs.full_build == 'false'
+        run: python -m scripts.analytics_refresh patch --archive "$RUNNER_TEMP/artifact.tar"
 
       # GITHUB_TOKEN pushes do not trigger a second deployment workflow. This job
       # must finish successfully before the dependent deploy job publishes its artifact.

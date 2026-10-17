@@ -48,7 +48,7 @@ if (analyticsEnabled && !/^[a-f0-9]{32}$/i.test(analyticsToken)) {
         <div class="footer-main">
           <div><a class="brand-name" href={href()}>{copy.name}</a><p>{copy.footer.tagline}</p></div>
           <nav class="footer-links" aria-label="Footer navigation">
-            <a href={href('data-sources/')}>{copy.footer.sources}</a><a href={href('guidelines/')}>{copy.footer.guidelines}</a><a href={href('privacy/')}>{copy.footer.privacy}</a><a href={`${repositoryUrl}/issues`} target="_blank" rel="noopener noreferrer">{copy.footer.issue} ↗</a>
+            <a href={href('data-sources/')}>{copy.footer.sources}</a><a href={href('guidelines/')}>{copy.footer.guidelines}</a><a href={href('privacy/')}>{copy.footer.privacy}</a><a href={href('analytics/')}>{copy.footer.analytics}</a><a href={`${repositoryUrl}/issues`} target="_blank" rel="noopener noreferrer">{copy.footer.issue} ↗</a>
           </nav>
         </div>
         <div class="footer-bottom"><span>{copy.footer.disclaimer}</span><span>{copy.footer.source}</span></div>

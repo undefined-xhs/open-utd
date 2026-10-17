@@ -1,8 +1,16 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
+import {parseAnalytics} from '../src/lib/analytics.ts';
 const manifest = JSON.parse(readFileSync('.generated/manifest.json','utf8'));
 assert(existsSync('dist/pagefind/pagefind.js'), 'Pagefind search bundle missing');
+const analyticsPage=readFileSync('dist/analytics/index.html','utf8');
+assert(analyticsPage.includes('data-pagefind-ignore') && !analyticsPage.includes('data-pagefind-body'),'Analytics must remain separate from catalog search records');
+assert(/data-feed="[^"]*\/data\/analytics\.json"/.test(analyticsPage),'Analytics must read the refreshable public snapshot');
+assert(analyticsPage.includes('data-period="7"') && analyticsPage.includes('data-period="30"'),'Analytics must offer both reporting windows');
+// The strict schema rejects private identifiers, credentials, raw events, and arbitrary URL paths.
+parseAnalytics(JSON.parse(readFileSync('dist/data/analytics.json','utf8')));
+assert(readFileSync('dist/index.html','utf8').includes('/analytics/'),'Public statistics must be reachable from the site footer');
 const terms = new Set();
 const links = html => [...html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)].map(match=>match[1]);
 function assertDiscussion(html, term) {

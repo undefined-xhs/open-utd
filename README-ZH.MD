@@ -100,11 +100,11 @@ npm run preview
 | 工作流 / 事件 | 行为 |
 | --- | --- |
 | `ci.yml`：向 main 提交 PR / 手动运行 | 只读令牌、独立临时演示 DB、离线数据测试、生产快照校验（若存在）、类型检查、子路径构建、静态产物检查 |
-| `site.yml`：push main | 获取最新评论，使用已提交的生产数据库构建和部署，不请求 Crossref |
-| `site.yml`：评论新增、编辑、删除；讨论编辑、删除、转移或更改类别 | 完整获取评论后与线上 JSON 比较，无变化直接结束；有变化则复用 HTML 和 Pagefind 缓存，只替换评论文件 |
-| `site.yml`：每天 03:37 UTC（北京时间 11:37） | 执行同样的轻量评论补查，覆盖遗漏事件和管理操作；不请求 Crossref，不提交数据库 |
+| `site.yml`：push main | 获取最新评论与汇总统计，使用已提交的生产数据库构建和部署，不请求 Crossref |
+| `site.yml`：评论新增、编辑、删除；讨论编辑、删除、转移或更改类别 | 完整获取评论和统计后与线上 JSON 比较，两者均无变化直接结束；有变化则复用 HTML 和 Pagefind 缓存，替换两份快照 |
+| `site.yml`：每天 03:37 UTC（北京时间 11:37） | 刷新汇总统计并补查评论，覆盖遗漏事件和管理操作；不请求 Crossref，不提交数据库 |
 | `site.yml`：每周一 02:23 UTC（北京时间 10:23） | Crossref 增量同步 → 校验 → 测试 → 评论快照 → 构建 → 提交数据库 → 上传 → 同一次运行部署 |
-| `site.yml`：手动运行 | 默认更新评论并部署；显式启用元数据同步后才采集 Crossref，历史导入需再打开 `initial_import`，可用 `journal` 只更新指定期刊；打开 `comments_only` 可改为轻量评论更新 |
+| `site.yml`：手动运行 | 默认更新评论与统计并部署；显式启用元数据同步后才采集 Crossref，历史导入需再打开 `initial_import`，可用 `journal` 只更新指定期刊；打开 `comments_only` 可改为轻量评论与统计更新 |
 
 ### 当前配置与首次部署
 
@@ -136,6 +136,14 @@ Cloudflare Web Analytics 可提供浏览量、访问次数、热门页面、来�
 3. 运行 `site.yml`，保持 `comments_only=false`、`sync_metadata=false`。部署成功后访问网站，再到 Cloudflare 的 **Web Analytics** 查看数据；报告可能需要几分钟才出现。
 
 只有使用正式数据、配置了非空 token 的生产构建才会加入脚本；演示数据和 `astro dev` 不加载。无效 token 会阻断生产构建，错误信息不会输出其值。停用时清空该 Actions Variable 并重新执行完整部署。统计配置纳入评论刷新缓存键，修改 token 后不会复用旧配置生成的 HTML。本地可使用 [`.env.example`](.env.example) 中的同名可选变量。
+
+### 公开统计页
+
+`/analytics/` 展示最近 7／30 个完整 UTC 日的浏览量、每日趋势、国家／地区汇总和热门站内路径，入口位于页脚。快照采集时间按访问者浏览器时区显示，统计日期按 UTC 划分。数据从启用统计脚本后开始，不补回之前的访问记录。尚无可用快照时显示等待状态，与成功同步后的真实零值区分。数据可能经过采样，也可能因请求被拦截而漏计，不代表去重人数。
+
+自动发布需要为对应 Cloudflare 账户创建 **Account Analytics:Read** API token，将其保存为仓库 Actions **Secret** `CLOUDFLARE_ANALYTICS_API_TOKEN`。另设置 Actions **Variables** `CLOUDFLARE_ACCOUNT_ID` 和 `CLOUDFLARE_WEB_ANALYTICS_SITE_TAG`，分别填写账户 ID 及 Web Analytics 仪表盘 URL 中的站点 tag。该 tag 与公开 beacon token 不同。API 凭据仅在采集步骤中使用，不进入静态网站。
+
+[`scripts/fetch_analytics.py`](scripts/fetch_analytics.py) 读取 Cloudflare 的 RUM GraphQL 数据集，以本站域名和 tag 限定范围，生成经过校验的汇总文件 `public/data/analytics.json`。普通部署和现有的每日快照检查都会刷新，也可用 `comments_only=true` 手动刷新。即使评论没有变化，统计变化仍会触发发布；轻量流程替换两份 JSON，复用 HTML 和 Pagefind。API 或数据校验失败会中止发布，保留线上旧快照。本地构建通过 `--ensure-empty` 准备空状态，不访问网络。清空三项后端配置后，下次运行会发布不可用状态；只删除部分配置则明确失败。
 
 ## 期刊和论文评论：giscus + GitHub Discussions
 
