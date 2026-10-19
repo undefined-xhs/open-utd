@@ -4,30 +4,30 @@ Source: Crossref. This report records the latest completed run for each journal.
 
 | Journal | Status | Publication range | Indexed through (UTC) | Fetched | Added | Updated | Unchanged |
 |---|---|---|---|---:|---:|---:|---:|
-| Academy of Management Journal | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1650 | 1650 | 0 | 0 |
-| Academy of Management Review | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1279 | 1279 | 0 | 0 |
-| Administrative Science Quarterly | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1114 | 1114 | 0 | 0 |
-| INFORMS Journal on Computing | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1997 | 1997 | 0 | 0 |
-| Information Systems Research | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1606 | 0 | 7 | 1599 |
-| Journal of Accounting Research | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 972 | 972 | 0 | 0 |
-| Journal of Accounting and Economics | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1090 | 1090 | 0 | 0 |
-| Journal of Consumer Research | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1790 | 1790 | 0 | 0 |
-| Journal of Financial Economics | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 2885 | 2885 | 0 | 0 |
-| Journal of International Business Studies | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1663 | 1663 | 0 | 0 |
-| Journal of Marketing | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1230 | 1230 | 0 | 0 |
-| Journal of Marketing Research | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1472 | 1472 | 0 | 0 |
-| Journal of Operations Management | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1105 | 1105 | 0 | 0 |
-| MIS Quarterly | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1335 | 1335 | 0 | 0 |
-| Management Science | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 6051 | 0 | 18 | 6033 |
-| Manufacturing & Service Operations Management | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1635 | 1635 | 0 | 0 |
-| Marketing Science | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1572 | 0 | 0 | 1572 |
-| Operations Research | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 2761 | 0 | 3 | 2758 |
-| Organization Science | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 1876 | 1876 | 0 | 0 |
-| Production and Operations Management | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 3290 | 3290 | 0 | 0 |
-| Strategic Management Journal | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 2316 | 2316 | 0 | 0 |
-| The Accounting Review | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 2203 | 2203 | 0 | 0 |
-| The Journal of Finance | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 2173 | 2173 | 0 | 0 |
-| The Review of Financial Studies | success | 2006-01-01 – 2026-10-16 | 2026-10-16T12:09:45Z | 2612 | 2612 | 0 | 0 |
+| Academy of Management Journal | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 371 | 0 | 209 | 162 |
+| Academy of Management Review | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 233 | 0 | 142 | 91 |
+| Administrative Science Quarterly | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 87 | 0 | 56 | 31 |
+| INFORMS Journal on Computing | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 130 | 3 | 65 | 62 |
+| Information Systems Research | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 191 | 0 | 100 | 91 |
+| Journal of Accounting Research | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 166 | 0 | 110 | 56 |
+| Journal of Accounting and Economics | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 187 | 1 | 121 | 65 |
+| Journal of Consumer Research | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 243 | 0 | 137 | 106 |
+| Journal of Financial Economics | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 677 | 1 | 376 | 300 |
+| Journal of International Business Studies | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 264 | 1 | 192 | 71 |
+| Journal of Marketing | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 255 | 0 | 154 | 101 |
+| Journal of Marketing Research | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 207 | 1 | 126 | 80 |
+| Journal of Operations Management | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 136 | 0 | 85 | 51 |
+| MIS Quarterly | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 225 | 0 | 154 | 71 |
+| Management Science | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 774 | 2 | 419 | 353 |
+| Manufacturing & Service Operations Management | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 162 | 2 | 100 | 60 |
+| Marketing Science | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 136 | 0 | 89 | 47 |
+| Operations Research | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 222 | 0 | 106 | 116 |
+| Organization Science | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 261 | 0 | 154 | 107 |
+| Production and Operations Management | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 264 | 2 | 159 | 103 |
+| Strategic Management Journal | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 442 | 1 | 288 | 153 |
+| The Accounting Review | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 253 | 0 | 162 | 91 |
+| The Journal of Finance | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 452 | 0 | 265 | 187 |
+| The Review of Financial Studies | success | 2006-01-01 – 2026-10-19 | 2026-10-19T07:55:54Z | 504 | 0 | 261 | 243 |
 
 ## Catalog quality
 
@@ -36,24 +36,24 @@ Source: Crossref. This report records the latest completed run for each journal.
 | Academy of Management Journal | 1650 | 48 (2.9%) | 50 (3.0%) | 1650 (100.0%) |
 | Academy of Management Review | 1279 | 83 (6.5%) | 54 (4.2%) | 1279 (100.0%) |
 | Administrative Science Quarterly | 1114 | 16 (1.4%) | 170 (15.3%) | 1114 (100.0%) |
-| INFORMS Journal on Computing | 1997 | 534 (26.7%) | 76 (3.8%) | 1997 (100.0%) |
+| INFORMS Journal on Computing | 2000 | 537 (26.9%) | 76 (3.8%) | 2000 (100.0%) |
 | Information Systems Research | 1606 | 109 (6.8%) | 187 (11.6%) | 1606 (100.0%) |
 | Journal of Accounting Research | 972 | 36 (3.7%) | 153 (15.7%) | 972 (100.0%) |
-| Journal of Accounting and Economics | 1090 | 25 (2.3%) | 181 (16.6%) | 1090 (100.0%) |
+| Journal of Accounting and Economics | 1091 | 26 (2.4%) | 181 (16.6%) | 1091 (100.0%) |
 | Journal of Consumer Research | 1790 | 87 (4.9%) | 328 (18.3%) | 1790 (100.0%) |
-| Journal of Financial Economics | 2885 | 395 (13.7%) | 259 (9.0%) | 2885 (100.0%) |
-| Journal of International Business Studies | 1663 | 31 (1.9%) | 63 (3.8%) | 1663 (100.0%) |
+| Journal of Financial Economics | 2886 | 396 (13.7%) | 259 (9.0%) | 2886 (100.0%) |
+| Journal of International Business Studies | 1664 | 32 (1.9%) | 63 (3.8%) | 1664 (100.0%) |
 | Journal of Marketing | 1230 | 81 (6.6%) | 65 (5.3%) | 1230 (100.0%) |
-| Journal of Marketing Research | 1472 | 57 (3.9%) | 65 (4.4%) | 1472 (100.0%) |
+| Journal of Marketing Research | 1473 | 58 (3.9%) | 65 (4.4%) | 1473 (100.0%) |
 | Journal of Operations Management | 1105 | 2 (0.2%) | 194 (17.6%) | 1105 (100.0%) |
 | MIS Quarterly | 1335 | 31 (2.3%) | 62 (4.6%) | 1335 (100.0%) |
-| Management Science | 6051 | 399 (6.6%) | 235 (3.9%) | 6051 (100.0%) |
-| Manufacturing & Service Operations Management | 1635 | 123 (7.5%) | 126 (7.7%) | 1635 (100.0%) |
+| Management Science | 6053 | 401 (6.6%) | 235 (3.9%) | 6053 (100.0%) |
+| Manufacturing & Service Operations Management | 1637 | 125 (7.6%) | 126 (7.7%) | 1637 (100.0%) |
 | Marketing Science | 1572 | 36 (2.3%) | 225 (14.3%) | 1572 (100.0%) |
 | Operations Research | 2761 | 102 (3.7%) | 247 (8.9%) | 2761 (100.0%) |
 | Organization Science | 1876 | 41 (2.2%) | 116 (6.2%) | 1876 (100.0%) |
-| Production and Operations Management | 3290 | 130 (4.0%) | 287 (8.7%) | 3290 (100.0%) |
-| Strategic Management Journal | 2316 | 35 (1.5%) | 216 (9.3%) | 2316 (100.0%) |
+| Production and Operations Management | 3292 | 132 (4.0%) | 287 (8.7%) | 3292 (100.0%) |
+| Strategic Management Journal | 2317 | 36 (1.6%) | 216 (9.3%) | 2317 (100.0%) |
 | The Accounting Review | 2203 | 48 (2.2%) | 367 (16.7%) | 2203 (100.0%) |
 | The Journal of Finance | 2173 | 22 (1.0%) | 579 (26.6%) | 2173 (100.0%) |
 | The Review of Financial Studies | 2612 | 113 (4.3%) | 386 (14.8%) | 2612 (100.0%) |
