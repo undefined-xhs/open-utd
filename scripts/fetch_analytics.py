@@ -298,12 +298,14 @@ def fetch_snapshot(client, account_id: str, site_tag: str, site_url: str,
         countries, pages, seen_countries = {}, {}, set()
         for row in _rows(result, "countries", COUNTRY_LIMIT, complete=True):
             code = row["dimensions"].get("countryName")
-            if not isinstance(code, str) or (code and not re.fullmatch(r"[A-Z]{2}", code)):
+            if not isinstance(code, str) or (code not in {"", "T1"} and not re.fullmatch(r"[A-Z]{2}", code)):
                 raise AnalyticsError("Cloudflare returned an invalid country code")
             if code in seen_countries:
                 raise AnalyticsError("Cloudflare returned duplicate country groups")
             seen_countries.add(code)
-            code = code or "ZZ"
+            # Cloudflare also emits XX (unknown) and T1 (Tor), neither a location.
+            # https://developers.cloudflare.com/waf/tools/ip-access-rules/parameters/
+            code = "ZZ" if code in {"", "XX", "T1"} else code
             countries[code] = countries.get(code, 0) + row["count"]
         seen_paths = set()
         for row in _rows(result, "pages", TOP_LIMIT):

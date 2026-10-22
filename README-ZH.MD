@@ -141,6 +141,8 @@ Cloudflare Web Analytics 可提供浏览量、访问次数、热门页面、来�
 
 `/analytics/` 展示最近 7／30 个完整 UTC 日的浏览量、每日趋势、国家／地区汇总和热门站内路径，入口位于页脚。快照采集时间按访问者浏览器时区显示，统计日期按 UTC 划分。数据从启用统计脚本后开始，不补回之前的访问记录。尚无可用快照时显示等待状态，与成功同步后的真实零值区分。数据可能经过采样，也可能因请求被拦截而漏计，不代表去重人数。
 
+Cloudflare 的[特殊地区代码](https://developers.cloudflare.com/waf/tools/ip-access-rules/parameters/) `XX`（未知）和 `T1`（Tor）与空地区代码一起合并到现有“未知”分类（`ZZ`），保留对应浏览量。
+
 自动发布需要为对应 Cloudflare 账户创建 **Account Analytics:Read** API token，将其保存为仓库 Actions **Secret** `CLOUDFLARE_ANALYTICS_API_TOKEN`。另设置 Actions **Variables** `CLOUDFLARE_ACCOUNT_ID` 和 `CLOUDFLARE_WEB_ANALYTICS_SITE_TAG`，分别填写账户 ID 及 Web Analytics 仪表盘 URL 中的站点 tag。该 tag 与公开 beacon token 不同。API 凭据仅在采集步骤中使用，不进入静态网站。
 
 [`scripts/fetch_analytics.py`](scripts/fetch_analytics.py) 读取 Cloudflare 的 RUM GraphQL 数据集，以本站域名和 tag 限定范围，生成经过校验的汇总文件 `public/data/analytics.json`。普通部署和现有的每日快照检查都会刷新，也可用 `comments_only=true` 手动刷新。即使评论没有变化，统计变化仍会触发发布；轻量流程替换两份 JSON，复用 HTML 和 Pagefind。API 或数据校验失败会中止发布，保留线上旧快照。本地构建通过 `--ensure-empty` 准备空状态，不访问网络。清空三项后端配置后，下次运行会发布不可用状态；只删除部分配置则明确失败。

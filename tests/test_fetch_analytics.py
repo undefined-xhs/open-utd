@@ -126,6 +126,33 @@ def test_country_ranking_is_bounded_and_unknown_is_normalized(monkeypatch):
     assert rows[0] == {"country_code": "ZZ", "page_views": 15}
 
 
+def test_cloudflare_special_country_codes_merge_without_losing_views(monkeypatch):
+    countries = [group(2, countryName=""), group(3, countryName="XX"),
+                 group(5, countryName="T1"), group(7, countryName="ZZ"),
+                 group(11, countryName="CN")]
+    payload, _ = fetch(monkeypatch, [
+        response(daily=[group(28, date="2026-10-16")], countries=countries),
+        response(countries=countries),
+    ])
+    for period in payload["periods"].values():
+        assert period["page_views"] == 28
+        assert period["countries"] == [{"country_code": "ZZ", "page_views": 17},
+                                       {"country_code": "CN", "page_views": 11}]
+
+
+@pytest.mark.parametrize("code", [None, 1, [], {}, "T2", "us", "Unknown", "United States"])
+def test_unsupported_country_values_still_fail(monkeypatch, code):
+    with pytest.raises(analytics.AnalyticsError, match="invalid country code"):
+        fetch(monkeypatch, [response(daily=[], countries=[group(1, countryName=code)])])
+
+
+@pytest.mark.parametrize("code", ["", "XX", "T1", "ZZ"])
+def test_duplicate_special_country_groups_still_fail(monkeypatch, code):
+    with pytest.raises(analytics.AnalyticsError, match="duplicate country groups"):
+        fetch(monkeypatch, [response(daily=[], countries=[group(1, countryName=code),
+                                                       group(2, countryName=code)])])
+
+
 @pytest.mark.parametrize("raw,expected", [
     ("/", "/"), ("/search?q=secret#result", "/search/"),
     ("/articles/a_one", "/articles/a_one/"), ("/journals/test-journal/years/2026/", "/journals/test-journal/years/2026/"),
